@@ -15,7 +15,7 @@
 | 함께하기 | 실시간으로 다른 사람 보기, 토닥이기, 같은 박자로 숨쉬기 |
 | 혼자서도 | 4·7·8 숨 고르기, 양 세기, 걱정 태우기, 별똥별 소원, 숲 요정과 반딧불 친구, 달님의 응원 |
 | 소리 | 빗소리, 파도, 풀벌레, 모닥불, 피아노, 오르골, 앰비언트, 싱잉볼, 기도 오르간, 그레고리오 성가 풍, 성당 종, 목탁과 풍경, 산사의 범종 (모두 브라우저에서 실시간 합성), 잠들기 타이머 |
-| 잠자리 이야기 | 다섯 배경 × 20편, 모두 100편. 소리 내어 읽기 지원 |
+| 잠자리 이야기 | 다섯 배경 × 20편, 모두 100편. 배경별 목차, 이전·다음 이야기, 읽은 이야기 표시 |
 | 남기는 글 | 나무에 거는 등불, 방명록, 익명 사연과 안아 주기·답장 |
 
 ## 구조
@@ -27,6 +27,7 @@ js/app.js           3D 장면, 캐릭터, 소리, 실시간, 게시판
 js/stories.js       잠자리 이야기 100편 (stories/*.json 에서 생성)
 js/config.js        Supabase 연결 설정
 supabase/schema.sql 데이터베이스 설정 (테이블, 보안 규칙, 도배 방지, 신고 자동 숨김)
+supabase/003_hardening.sql 보안 보강 (작성자 번호 숨기기, 신고 제한)
 ```
 
 빌드 과정이 없어요. 정적 파일만으로 동작하고, 라이브러리는 CDN에서 불러와요(three.js r128, supabase-js 2.117.3).
@@ -36,7 +37,8 @@ supabase/schema.sql 데이터베이스 설정 (테이블, 보안 규칙, 도배 
 1. **익명 로그인 켜기:** Supabase 대시보드 → Authentication → Sign In / Providers → *Allow anonymous sign-ins* 를 켜요. 다른 서비스와 같은 프로젝트를 쓴다면, 먼저 기존 테이블의 보안 규칙이 익명 사용자를 막는지 확인하세요.
 2. **데이터베이스 만들기:** SQL Editor 에 `supabase/schema.sql` 전체를 붙여 넣고 Run 해요. 쉼터 데이터는 별도 스키마 `shelter` 에 만들어져 기존 `public` 테이블과 섞이지 않아요. 실행 후 Project Settings → Data API → *Exposed schemas* 에 `shelter` 를 추가해요.
 3. **키 넣기:** Project Settings → API Keys 의 *Publishable key*(`sb_publishable_…`)를 `js/config.js` 의 `supabaseKey` 에 넣어요. 공개용 키라 저장소에 올려도 괜찮아요. `service_role`·secret 키는 절대 넣지 마세요.
-4. **GitHub Pages 켜기:** 저장소 Settings → Pages → Branch `main` / `/(root)` 로 저장해요.
+4. **보안 보강:** 예전에 schema.sql 을 실행했다면 `supabase/003_hardening.sql` 도 한 번 실행해요. 작성자 익명 번호를 다른 사람이 읽지 못하게 하고, 신고 도배와 자동 숨김 악용을 막아요.
+5. **GitHub Pages 켜기:** 저장소 Settings → Pages → Branch `main` / `/(root)` 로 저장해요.
 
 키가 없으면 저장과 실시간 기능 없이 혼자 쓰는 모드로 동작해요.
 
@@ -51,7 +53,7 @@ supabase/schema.sql 데이터베이스 설정 (테이블, 보안 규칙, 도배 
 - 서로 다른 세 사람이 신고한 글은 자동으로 가려져요.
 - **관리자 등록:** 화면 [안내] 맨 아래의 "관리자 등록용 번호"를 복사해 SQL Editor 에서 실행하면, 그 브라우저에서 모든 글에 "관리자로서 가리기"가 보여요.
   ```sql
-  insert into public.admins (user_id) values ('여기에_번호');
+  insert into shelter.admins (user_id) values ('여기에_번호');
   ```
 - 가려진 글은 지워지지 않고 `hidden = true` 로 남아요. 대시보드 Table Editor 에서 확인하고 되돌릴 수 있어요.
 - Supabase 무료 요금제는 7일 동안 요청이 없으면 일시 정지돼요. 대시보드에서 다시 켤 수 있어요.

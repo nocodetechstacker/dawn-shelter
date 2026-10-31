@@ -2,6 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://fuzikvijizbxxvnglmet.supabase.co wss://fuzikvijizbxxvnglmet.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>새벽 쉼터</title>
 <meta name="description" content="잠 못 드는 밤, 귀여운 캐릭터가 되어 모닥불 곁에 모여 걷고 명상하고 눕는 3D 쉼터. 음악, 잠자리 이야기, 방명록과 사연 나누기.">
@@ -13,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap">
-<link rel="stylesheet" href="css/style.css?v=202611010058">
+<link rel="stylesheet" href="css/style.css?v=202611010112">
 </head>
 <body>
 <canvas id="scene" aria-label="모닥불과 큰 나무가 있는 밤의 풀밭. 땅을 누르면 내 캐릭터가 그쪽으로 걸어갑니다."></canvas>
@@ -86,12 +88,13 @@
 
 <section class="panel" id="pStory" hidden>
   <div class="ph"><h2>잠자리 이야기</h2></div>
-  <p>천천히 가라앉는 이야기 100편이 있어요. 배경을 고르고 눈으로 읽거나, 소리 내어 읽어 달라고 해 보세요.</p>
+  <p id="storyIntro">천천히 가라앉는 이야기 100편이 있어요. 배경을 고르고, 읽고 싶은 제목을 눌러 보세요.</p>
   <div class="seg" id="themes"></div>
+  <ol class="toc" id="storyToc"></ol>
   <h3 class="story-title" id="storyTitle" hidden></h3>
   <div class="story" id="storyText" hidden></div>
   <div class="row"><span class="small" id="storyState"></span>
-    <div class="seg"><button class="btn ghost" id="readBtn" hidden>소리 내어 읽기</button><button class="btn" id="storyGo">이야기 듣기</button></div></div>
+    <div class="seg"><button class="btn ghost" id="storyPrev" hidden>이전</button><button class="btn ghost" id="storyBack" hidden>목록</button><button class="btn" id="storyGo">아무 이야기나</button></div></div>
 </section>
 
 <section class="panel" id="pWorry" hidden>
@@ -213,10 +216,10 @@
   </nav>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=202611010058"></script>
-<script src="js/stories.js?v=202611010058"></script>
-<script src="js/app.js?v=202611010058"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<script src="js/config.js?v=202611010112"></script>
+<script src="js/stories.js?v=202611010112"></script>
+<script src="js/app.js?v=202611010112"></script>
 </body>
 </html>

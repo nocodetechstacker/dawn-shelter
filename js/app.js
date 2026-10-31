@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 /* 새 버전이 배포되면 오래된 화면 대신 최신 화면을 불러오기 */
-const BUILD="202611010058";
+const BUILD="202611010112";
 (async()=>{try{const r=await fetch("version.txt?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const nv=(await r.text()).trim();
   if(nv&&nv!==BUILD){const u=new URL(location.href);if(u.searchParams.get("v")!==nv){u.searchParams.set("v",nv);location.replace(u.toString());}}}catch(e){}})();
 const $=id=>document.getElementById(id);
@@ -266,26 +266,39 @@ function breathLevel(start,now){const t=(((now-start)/1000)%CYCLE_LEN+CYCLE_LEN)
 /* ---------- 잠자리 이야기 (미리 지어 둔 100편) ---------- */
 const THEMES=[["sea","바닷가 오두막"],["snow","눈 오는 숲"],["train","밤기차"],["bakery","고양이 빵집"],["star","별 닦는 사람"]];
 const BED=window.BEDTIME_STORIES||{};
-let storyTheme=THEMES.some(t=>t[0]===store.get("shelter.theme"))?store.get("shelter.theme"):"sea";const storyOrder={};
-THEMES.forEach(([k,label])=>{const b=document.createElement("button");b.textContent=label;b.setAttribute("aria-pressed",String(k===storyTheme));
-  b.addEventListener("click",()=>{segPick($("themes"),b);storyTheme=k;store.set("shelter.theme",k);showStory();});$("themes").append(b);});
-const canSpeak="speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined";
-let speaking=false;
-function stopSpeak(){if(canSpeak)speechSynthesis.cancel();speaking=false;$("readBtn").textContent="소리 내어 읽기";}
-$("readBtn").addEventListener("click",()=>{if(!canSpeak)return;if(speaking){stopSpeak();return;}
-  const text=$("storyTitle").textContent+". "+$("storyText").textContent;if(!text.trim())return;speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);u.lang="ko-KR";u.rate=.82;u.pitch=.92;
-  const v=speechSynthesis.getVoices().find(v=>/^ko/i.test(v.lang));if(v)u.voice=v;
-  u.onend=()=>stopSpeak();u.onerror=()=>{stopSpeak();toast("이 기기에서는 소리 내어 읽을 수 없어요");};
-  speechSynthesis.speak(u);speaking=true;$("readBtn").textContent="읽기 멈추기";});
-function showStory(){stopSpeak();const list=BED[storyTheme]||[];
+let storyTheme=THEMES.some(t=>t[0]===store.get("shelter.theme"))?store.get("shelter.theme"):"sea";
+let storyIdx=-1;let readSet=new Set();try{readSet=new Set(JSON.parse(store.get("shelter.read")||"[]"));}catch(e){}
+const themeLabel=k=>(THEMES.find(t=>t[0]===k)||["",""])[1];
+const themeBtns=THEMES.map(([k,label])=>{const b=document.createElement("button");b.textContent=label;b.setAttribute("aria-pressed",String(k===storyTheme));
+  b.addEventListener("click",()=>{segPick($("themes"),b);storyTheme=k;store.set("shelter.theme",k);showToc();});$("themes").append(b);return b;});
+function syncThemeBtns(){themeBtns.forEach((b,j)=>b.setAttribute("aria-pressed",String(THEMES[j][0]===storyTheme)));}
+function showToc(){storyIdx=-1;const list=BED[storyTheme]||[];const toc=$("storyToc");toc.replaceChildren();
   if(!list.length){$("storyState").textContent="이야기를 불러오지 못했어요";return;}
-  if(!storyOrder[storyTheme]||!storyOrder[storyTheme].length)storyOrder[storyTheme]=shuffle(list.map((_,i)=>i));
-  const i=storyOrder[storyTheme].pop();const s=list[i];
+  list.forEach((s,i)=>{const li=document.createElement("li");const b=el("button","toc-item");
+    b.append(el("span","toc-n",String(i+1)),el("span","toc-t",s.title));
+    if(readSet.has(storyTheme+":"+i)){b.classList.add("read");b.append(el("span","toc-r","읽음"));}
+    b.addEventListener("click",()=>openStory(i));li.append(b);toc.append(li);});
+  toc.hidden=false;toc.scrollTop=0;$("storyIntro").hidden=false;$("storyTitle").hidden=true;$("storyText").hidden=true;
+  $("storyPrev").hidden=true;$("storyBack").hidden=true;$("storyGo").textContent="아무 이야기나";
+  const n=list.filter((_,i)=>readSet.has(storyTheme+":"+i)).length;
+  $("storyState").textContent=`${themeLabel(storyTheme)} · ${list.length}편${n?` 중 ${n}편 읽음`:""}`;}
+function openStory(i){const list=BED[storyTheme]||[];if(!list[i])return;storyIdx=i;const s=list[i];
+  $("storyToc").hidden=true;$("storyIntro").hidden=true;
   $("storyTitle").textContent=s.title;$("storyTitle").hidden=false;$("storyText").textContent=s.body;$("storyText").hidden=false;$("storyText").scrollTop=0;
-  const label=(THEMES.find(t=>t[0]===storyTheme)||["",""])[1];
-  $("storyState").textContent=`${label} · ${list.length}편 중 ${i+1}번째`;$("readBtn").hidden=!canSpeak;$("storyGo").textContent="다른 이야기";}
-$("storyGo").addEventListener("click",showStory);
+  readSet.add(storyTheme+":"+i);store.set("shelter.read",JSON.stringify([...readSet]));
+  $("storyState").textContent=`${themeLabel(storyTheme)} · ${list.length}편 중 ${i+1}번째`;
+  $("storyPrev").hidden=false;$("storyPrev").disabled=i===0&&THEMES[0][0]===storyTheme;$("storyBack").hidden=false;
+  const last=i===list.length-1&&THEMES[THEMES.length-1][0]===storyTheme;$("storyGo").textContent=last?"처음 이야기로":"다음 이야기";}
+function stepStory(d){const ti=THEMES.findIndex(t=>t[0]===storyTheme);const list=BED[storyTheme]||[];let i=storyIdx+d;
+  if(i>=list.length){storyTheme=THEMES[(ti+1)%THEMES.length][0];i=0;}
+  else if(i<0){if(ti===0)return;storyTheme=THEMES[ti-1][0];i=(BED[storyTheme]||[]).length-1;}
+  store.set("shelter.theme",storyTheme);syncThemeBtns();openStory(i);}
+$("storyGo").addEventListener("click",()=>{if(storyIdx<0){const list=BED[storyTheme]||[];if(!list.length)return;
+  const unread=list.map((_,i)=>i).filter(i=>!readSet.has(storyTheme+":"+i));const pool=unread.length?unread:list.map((_,i)=>i);
+  openStory(pool[Math.floor(Math.random()*pool.length)]);}else stepStory(1);});
+$("storyPrev").addEventListener("click",()=>stepStory(-1));
+$("storyBack").addEventListener("click",showToc);
+setTimeout(showToc,0);
 
 /* ---------- 마음 우체통 (방명록, 사연) · Supabase ---------- */
 $("boardTabs").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{segPick($("boardTabs"),b);$("tabGuest").hidden=b.dataset.tab!=="guest";$("tabStory").hidden=b.dataset.tab!=="story";}));
@@ -304,26 +317,36 @@ function errMsg(err,what){const m=(err&&(err.message||err.details))||"";
   return `${what} 못했어요. 다시 눌러 주세요`;}
 let authFailed=false;
 function needDb(stateEl){if(!db||!myId){stateEl.textContent=!CONFIGURED?"아직 저장 공간이 연결되지 않았어요":authFailed?"지금은 글을 남길 수 없어요. 읽기만 할 수 있어요":"연결하는 중이에요. 잠시 뒤 다시 눌러 주세요";return false;}return true;}
+/* 글 읽기: 작성자 번호(user_id) 대신 "내 글인지(mine)"만 받아요.
+   보기(…_pub)가 아직 없으면(003_hardening.sql 실행 전) 예전 방식으로 읽어요. */
+let usePub=true;
+async function readRows(table,cols,build){
+  if(usePub){const r=await build(db.from(table+"_pub").select(cols+",mine"));
+    if(!r.error)return r;
+    if(r.error.code!=="PGRST205"&&r.error.code!=="42P01")return r;usePub=false;}
+  const r=await build(db.from(table).select(cols+",user_id"));
+  if(r.data)r.data.forEach(x=>{x.mine=!!myId&&x.user_id===myId;delete x.user_id;});
+  return r;}
 async function refresh(table){if(!db)return;
-  if(table==="lanterns"){const {data,error}=await db.from("lanterns").select("id,user_id,body,created_at").eq("hidden",false).order("created_at",{ascending:false}).limit(150);if(!error){DATA.lanterns=data||[];onLanternsChanged();}}
-  else if(table==="guestbook"){const {data,error}=await db.from("guestbook").select("id,user_id,body,created_at").eq("hidden",false).order("created_at",{ascending:false}).limit(80);if(!error){DATA.guest=data||[];renderGuest();}}
-  else{const {data,error}=await db.from("stories").select("id,user_id,body,created_at").eq("hidden",false).order("created_at",{ascending:false}).limit(60);if(error)return;DATA.stories=data||[];
-    const ids=DATA.stories.map(s=>s.id);
-    if(ids.length){const [r1,r2]=await Promise.all([db.from("replies").select("id,story_id,user_id,body,created_at").eq("hidden",false).in("story_id",ids).order("created_at",{ascending:true}).limit(1000),
-      db.from("hugs").select("story_id,user_id").in("story_id",ids).limit(5000)]);DATA.replies=r1.data||[];DATA.hugs=r2.data||[];}
-    else{DATA.replies=[];DATA.hugs=[];}renderStories();}}
+  if(table==="lanterns"){const {data,error}=await readRows("lanterns","id,body,created_at",q=>q.eq("hidden",false).order("created_at",{ascending:false}).limit(150));if(!error){DATA.lanterns=data||[];onLanternsChanged();}}
+  else if(table==="guestbook"){const {data,error}=await readRows("guestbook","id,body,created_at",q=>q.eq("hidden",false).order("created_at",{ascending:false}).limit(80));if(!error){DATA.guest=data||[];renderGuest();}}
+  else{const {data,error}=await readRows("stories","id,body,created_at",q=>q.eq("hidden",false).order("created_at",{ascending:false}).limit(60));if(error)return;DATA.stories=data||[];
+    const ids=DATA.stories.map(r=>r.id);DATA.replies=[];DATA.hugs=[];
+    if(ids.length){const [r1,r2]=await Promise.all([readRows("replies","id,story_id,body,created_at",q=>q.eq("hidden",false).in("story_id",ids).order("created_at",{ascending:true}).limit(1000)),
+      readRows("hugs","story_id",q=>q.in("story_id",ids).limit(5000))]);DATA.replies=r1.data||[];DATA.hugs=r2.data||[];}
+    renderStories();}}
 const refreshTimers={};function refreshSoon(t){clearTimeout(refreshTimers[t]);refreshTimers[t]=setTimeout(()=>refresh(t),400);}
 async function report(table,id,btn){if(!needDb($("stState")))return;btn.disabled=true;
   const {error}=await db.from("reports").insert({target_table:table,target_id:id});
   if(error&&!/duplicate|unique/i.test(error.message||"")){btn.disabled=false;toast("신고하지 못했어요. 다시 눌러 주세요");return;}
   btn.textContent="신고했어요";toast("알려 주셔서 고마워요. 여러 사람이 신고하면 자동으로 가려져요");}
 async function removeRow(table,row,btn,after){btn.disabled=true;
-  const q=row.user_id===myId?db.from(table).delete().eq("id",row.id):db.from(table).update({hidden:true}).eq("id",row.id);
+  const q=row.mine?db.from(table).delete().eq("id",row.id):db.from(table).update({hidden:true}).eq("id",row.id);
   const {error}=await q;if(error){btn.disabled=false;btn.textContent="지우지 못했어요";return;}
   refresh(table==="replies"?"stories":table);if(after)after();}
 function rowActs(table,row,wrap,mine){
-  if(db&&(row.user_id===myId||isOwner)){const d=el("button","link",row.user_id===myId?mine:"관리자로서 가리기");d.addEventListener("click",()=>removeRow(table,row,d));wrap.append(d);}
-  if(db&&myId&&row.user_id!==myId){const r=el("button","link","신고");r.addEventListener("click",()=>report(table,row.id,r));wrap.append(r);}}
+  if(db&&(row.mine||isOwner)){const d=el("button","link",row.mine?mine:"관리자로서 가리기");d.addEventListener("click",()=>removeRow(table,row,d));wrap.append(d);}
+  if(db&&myId&&!row.mine){const r=el("button","link","신고");r.addEventListener("click",()=>report(table,row.id,r));wrap.append(r);}}
 $("gbText").addEventListener("input",e=>{$("gbState").textContent=`${e.target.value.length} / 100`;});
 $("stText").addEventListener("input",e=>{$("stState").textContent=`${e.target.value.length} / 1000`;});
 let busy=false;
@@ -338,26 +361,26 @@ $("stGo").addEventListener("click",async()=>{const v=$("stText").value.trim();if
 function renderGuest(){const list=$("gbList");list.replaceChildren();
   if(!DATA.guest.length){list.append(el("div","empty","아직 남겨진 글이 없어요. 첫 흔적을 남겨 주세요."));return;}
   DATA.guest.forEach(r=>{const e=el("div","entry");e.append(el("div","body",String(r.body).slice(0,100)));const m=el("div","meta");
-    m.append(el("span",null,(r.user_id===myId?"나":"다녀간 이웃")+" · "+ago(tsOf(r))));const acts=el("div","acts");rowActs("guestbook",r,acts,"지우기");m.append(acts);e.append(m);list.append(e);});}
+    m.append(el("span",null,(r.mine?"나":"다녀간 이웃")+" · "+ago(tsOf(r))));const acts=el("div","acts");rowActs("guestbook",r,acts,"지우기");m.append(acts);e.append(m);list.append(e);});}
 const replyDrafts=new Map();const expanded=new Set();
 function renderStories(){const list=$("stList");
   list.querySelectorAll("textarea[data-k]").forEach(t=>replyDrafts.set(t.dataset.k,t.value));const focusK=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.k:null;
   const hugN=new Map(),myHugs=new Set(),reps=new Map();
-  DATA.hugs.forEach(h=>{hugN.set(h.story_id,(hugN.get(h.story_id)||0)+1);if(h.user_id===myId)myHugs.add(h.story_id);});
+  DATA.hugs.forEach(h=>{hugN.set(h.story_id,(hugN.get(h.story_id)||0)+1);if(h.mine)myHugs.add(h.story_id);});
   DATA.replies.forEach(r=>{if(!reps.has(r.story_id))reps.set(r.story_id,[]);reps.get(r.story_id).push(r);});
   list.replaceChildren();
   if(!DATA.stories.length){list.append(el("div","empty","아직 올라온 사연이 없어요."));return;}
   DATA.stories.forEach(r=>{const key=String(r.id);const text=String(r.body).slice(0,1000);const e=el("div","entry");
     e.append(el("div","body"+(expanded.has(key)?"":" clamp"),text));
     if(text.length>160||text.split("\n").length>5){const more=el("button","link",expanded.has(key)?"접기":"끝까지 읽기");more.addEventListener("click",()=>{if(expanded.has(key))expanded.delete(key);else expanded.add(key);renderStories();});e.append(more);}
-    const m=el("div","meta");m.append(el("span",null,(r.user_id===myId?"내 사연":"익명의 사연")+" · "+ago(tsOf(r))));
+    const m=el("div","meta");m.append(el("span",null,(r.mine?"내 사연":"익명의 사연")+" · "+ago(tsOf(r))));
     const acts=el("div","acts");const n=hugN.get(r.id)||0;const hb=el("button","btn ghost sm hug",`안아 주기${n?" "+n:""}`);hb.setAttribute("aria-pressed",String(myHugs.has(r.id)));
     hb.addEventListener("click",async()=>{if(!needDb($("stState")))return;hb.disabled=true;const has=myHugs.has(r.id);
-      const {error}=has?await db.from("hugs").delete().eq("story_id",r.id).eq("user_id",myId):await db.from("hugs").insert({story_id:r.id});
+      const {error}=has?await db.from("hugs").delete().eq("story_id",r.id):await db.from("hugs").insert({story_id:r.id});
       if(error)toast(errMsg(error,"전하지"));else{if(!has)toast("마음으로 꼭 안아 주었어요");refresh("stories");}hb.disabled=false;});
     acts.append(hb);rowActs("stories",r,acts,"내리기");m.append(acts);e.append(m);
     const rs=reps.get(r.id)||[];
-    if(rs.length){const box=el("div","replies");rs.forEach(rp=>{const line=el("div","reply",String(rp.body).slice(0,200));line.append(el("span","small",(rp.user_id===myId?"나":"이웃")+" · "+ago(tsOf(rp))));
+    if(rs.length){const box=el("div","replies");rs.forEach(rp=>{const line=el("div","reply",String(rp.body).slice(0,200));line.append(el("span","small",(rp.mine?"나":"이웃")+" · "+ago(tsOf(rp))));
       const a=el("span","acts");a.style.marginLeft="6px";a.style.display="inline-flex";rowActs("replies",rp,a,"지우기");line.append(a);box.append(line);});e.append(box);}
     const form=el("div","replyform");const ta=el("textarea");ta.rows=1;ta.maxLength=200;ta.placeholder="따뜻한 답장 남기기";ta.dataset.k=key;ta.setAttribute("aria-label","답장");ta.value=replyDrafts.get(key)||"";
     const send=el("button","btn sm","보내기");send.addEventListener("click",async()=>{const v=ta.value.trim();if(!v)return ta.focus();if(!needDb($("stState")))return;send.disabled=true;
@@ -799,7 +822,7 @@ function hearts(c,n=5){for(let i=0;i<n;i++)setTimeout(()=>{const p=c.root.positi
 function bubble(c,txt){const p=c.root.position.clone();p.y+=2.5;floatSprite(bubbleTex(txt),p,{scale:.55,aspect:3,vy:.12,life:2400,grow:.05,follow:c});}
 
 const EMOTES={wave:{dur:2.2},yawn:{dur:2.6,txt:"하아암"},stretch:{dur:2.4,txt:"으쌰"},heart:{dur:1.2},nod:{dur:3,txt:"꾸벅"},shh:{dur:2.4,txt:"쉿"}};
-function playEmote(c,name){const E=EMOTES[name];if(!E)return;c.emote={name,t0:performance.now()};if(name==="heart")hearts(c,6);if(E.txt)bubble(c,E.txt);}
+function playEmote(c,name){if(!Object.prototype.hasOwnProperty.call(EMOTES,name))return;const E=EMOTES[name];c.emote={name,t0:performance.now()};if(name==="heart")hearts(c,6);if(E.txt)bubble(c,E.txt);}
 
 const tmpV=new THREE.Vector3(),tmpV2=new THREE.Vector3();const UP=new THREE.Vector3(0,1,0);
 const lerp=(a,b,k)=>a+(b-a)*k;
@@ -917,7 +940,7 @@ function placeLantern(key,text,at,owner,row){let L=lanterns.get(key);
   Object.assign(L,{text,at,owner,row});}
 function removeLantern(key){const L=lanterns.get(key);if(L){scene.remove(L.g);L.glow.material.dispose();lanterns.delete(key);}}
 function syncLanterns(){const seen=new Set();
-  DATA.lanterns.forEach(r=>{if(!r||typeof r.body!=="string"||!r.body.trim())return;const key="l"+r.id;seen.add(key);placeLantern(key,r.body.slice(0,80),tsOf(r),r.user_id,r);});
+  DATA.lanterns.forEach(r=>{if(!r||typeof r.body!=="string"||!r.body.trim())return;const key="l"+r.id;seen.add(key);placeLantern(key,r.body.slice(0,80),tsOf(r),!!r.mine,r);});
   [...lanterns.keys()].forEach(k=>{if(!seen.has(k))removeLantern(k);});if(popFor&&popFor.kind==="lantern"&&!lanterns.has(popFor.key))hidePop();}
 onLanternsChanged=syncLanterns;
 
@@ -1051,7 +1074,7 @@ canvas.addEventListener("pointerup",e=>{endPtr(e);if(!downAt)return;const moved=
 
 const pop=$("pop");let popFor=null;const patCool=new Map();
 function hidePop(){pop.hidden=true;popFor=null;}
-const STATE_KO={walk:"산책 중",meditate:"명상 중",sleep:"자는 중"};const SP_KO=Object.fromEntries(SPECIES);
+const STATE_KO={walk:"산책 중",meditate:"명상 중",sleep:"자는 중"};const SP_KO=Object.fromEntries(SPECIES);const own=(o,k)=>typeof k==="string"&&Object.prototype.hasOwnProperty.call(o,k);
 function showPeerPop(key){const p=peers.get(key);if(!p)return;popFor={kind:"peer",key};pop.replaceChildren();
   pop.append(el("div","txt",p.breathing?`숨 고르는 ${SP_KO[p.sp]||"친구"}`:`${STATE_KO[p.state]}인 ${SP_KO[p.sp]||"친구"}`));
   const b=el("button","btn","토닥이기");
@@ -1067,7 +1090,7 @@ function showNpcPop(i){const n=npcs[i];popFor={kind:"npc",key:i};pop.replaceChil
   const b=el("button","btn ghost","쓰다듬기");b.addEventListener("click",()=>{hearts(n,3);if(n.state==="walk")playEmote(n,"wave");hidePop();});
   pop.append(el("div","txt",`숲 친구 ${SP_KO[n.sp]} · ${STATE_KO[n.state]}`),el("div","small","혼자일 때도 곁에 있어 주는 친구예요"),b);pop.hidden=false;}
 function showLanternPop(key){const L=lanterns.get(key);if(!L)return;popFor={kind:"lantern",key};pop.replaceChildren();
-  pop.append(el("div","txt",L.text),el("div","small",(L.owner===myId?"내가 건 등불":"누군가 건 등불")+" · "+ago(L.at)));
+  pop.append(el("div","txt",L.text),el("div","small",(L.owner===true?"내가 건 등불":"누군가 건 등불")+" · "+ago(L.at)));
   const acts=el("div","acts");rowActs("lanterns",L.row,acts,"등불 내리기");if(acts.childNodes.length)pop.append(acts);
   pop.hidden=false;}
 addEventListener("keydown",e=>{if(e.key==="Escape"){hidePop();openPanel(null);}});
@@ -1078,27 +1101,30 @@ function sendPresence(force){if(!room)return;
   const doSend=()=>{lastPresence=Date.now();room.presence({x:Math.round(me.target.x*100)/100,z:Math.round(me.target.z*100)/100,yaw:Math.round(me.yaw*100)/100,
     s:me.state,bt:me.inBoat?1:0,c:myColor,hat:myHatT,it:myItem,sp:mySp,b:breathing,bs:breathing?breathStart:0,e:lastEmote.e,et:lastEmote.et}).catch(()=>{});};
   clearTimeout(presenceTimer);if(force&&Date.now()-lastPresence>250)doSend();else presenceTimer=setTimeout(doSend,300);}
+const MAX_PEERS=60;const patFrom=new Map();let patToastAt=0;
 function applyPeer(pr){if(pr.kind!=="viewer")return;if(pr.isMe&&pr.sameTab){myPeer=pr.peer;return;}
   const ps=pr.presence||{};const x=Number(ps.x),z=Number(ps.z);if(!isFinite(x)||!isFinite(z))return;
   const ci=Math.max(0,Math.min(BODY_COLORS.length-1,Math.floor(Number(ps.c)||0)));const hat=Math.max(0,Math.min(5,Math.floor(Number(ps.hat)||0)));
-  const it=Math.max(0,Math.min(4,Math.floor(Number(ps.it)||0)));const sp=SP_KO[ps.sp]?ps.sp:"round";
+  const it=Math.max(0,Math.min(4,Math.floor(Number(ps.it)||0)));const sp=own(SP_KO,ps.sp)?ps.sp:"round";
   let p=peers.get(pr.peer);const opts={color:BODY_COLORS[ci],hat,item:it,sp};
+  if(!p&&peers.size>=MAX_PEERS)return;
   if(!p){p=makeChar(opts);const a=Math.random()*Math.PI*2;p.pos.set(x+Math.cos(a)*6,0,z+Math.sin(a)*6);peers.set(pr.peer,p);p.ci=ci;p.lastEt=Number(ps.et)||0;}
-  else if(p.sp!==sp){const keepEt=p.lastEt;p=rebuild(p,opts);p.lastEt=keepEt;peers.set(pr.peer,p);p.ci=ci;}
+  else if(p.sp!==sp&&!(p.rebuiltAt>performance.now()-2000)){const keepEt=p.lastEt;p=rebuild(p,opts);p.rebuiltAt=performance.now();p.lastEt=keepEt;peers.set(pr.peer,p);p.ci=ci;}
   if(p.ci!==ci){p.bodyMat.color.set(BODY_COLORS[ci]);p.ci=ci;}setHat(p,hat);setItem(p,it);
   if(ps.bt){p.target.set(Math.max(SEA_B.x0,Math.min(SEA_B.x1,x)),0,Math.max(SEA_B.z0-.5,Math.min(SEA_B.z1,z)));}else{const d=Math.hypot(x,z);const k=d>RADIUS&&z<44?RADIUS/d:1;p.target.set(x*k,0,z*k);}
   if(!!ps.bt!==!!p.inBoat){setBoat(p,!!ps.bt);if(ps.bt)p.pos.copy(p.target);}
   const st=["walk","meditate","sleep"].includes(ps.s)?ps.s:"walk";
   if(st!=="walk"){p.pos.copy(p.target);if(isFinite(Number(ps.yaw)))p.yaw=Number(ps.yaw);}
   p.state=st;p.breathing=!!ps.b;p.bs=Number(ps.bs)||0;p.leaving=0;
-  const et=Number(ps.et)||0;if(et&&et!==p.lastEt){p.lastEt=et;if(Date.now()-et<6000&&EMOTES[ps.e])playEmote(p,ps.e);}}
+  const et=Number(ps.et)||0;if(et&&et!==p.lastEt){p.lastEt=et;if(Date.now()-et<6000&&own(EMOTES,ps.e))playEmote(p,ps.e);}}
 function dropPeer(peer){const p=peers.get(peer);if(p&&!p.leaving){p.leaving=performance.now();setCount();}}
 startSupabase({onRoom(r){room=r;setCount();
     r.onPeers(ch=>{ch.peers.forEach(applyPeer);ch.left.forEach(p=>dropPeer(p.peer));const live=new Set(ch.peers.map(p=>p.peer));peers.forEach((v,k)=>{if(!live.has(k))dropPeer(k);});setCount();},()=>{room=null;setCount();});
     r.on("warm",msg=>{const to=msg&&msg.data&&msg.data.to;if(typeof to!=="string")return;
       const from=msg.sameTab?me:peers.get(msg.peer);const target=(to===myPeer)?me:peers.get(to);if(!from||!target)return;
+      const nowT=Date.now();if(!msg.sameTab){if((patFrom.get(msg.peer)||0)>nowT)return;patFrom.set(msg.peer,nowT+4000);}if(flyers.length>80)return;
       flyers.push({s:null,fromC:from,toC:target,t0:performance.now(),dur:1500,kind:"pat"});
-      if(to===myPeer&&!msg.sameTab)setTimeout(()=>toast("누군가 당신을 토닥여 줬어요"),1500);},()=>{});
+      if(to===myPeer&&!msg.sameTab&&nowT>patToastAt){patToastAt=nowT+5000;setTimeout(()=>toast("누군가 당신을 토닥여 줬어요"),1500);}},()=>{});
     sendPresence(true);},onLanterns:syncLanterns});
 
 /* 등불 쓰기 */
