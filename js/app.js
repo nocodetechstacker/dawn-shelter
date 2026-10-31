@@ -798,7 +798,7 @@ function npcBrain(n,dt){n.timer-=dt;if(n.state==="walk"&&n.moving)return;if(n.ti
   else{n.state="sleep";n.timer=40+Math.random()*50;}}
 
 const peers=new Map();let myPeer=null,room=null,roomCanEmit=true;
-function setCount(){const n=peers.size;$("count").textContent=room?(n===0?"지금은 숲 친구들과 당신뿐이에요":`지금 ${n+1}명이 함께 깨어 있어요`):"숲 친구들과 함께 있어요";}
+function setCount(){let n=0;peers.forEach(p=>{if(!p.leaving)n++;});$("count").textContent=room?(n===0?"지금은 숲 친구들과 당신뿐이에요":`지금 ${n+1}명이 함께 깨어 있어요`):"숲 친구들과 함께 있어요";}
 
 const lanterns=new Map();const paperMat=new THREE.MeshBasicMaterial({color:0xffd59a});
 function hashN(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967295;}
@@ -976,7 +976,7 @@ function applyPeer(pr){if(pr.kind!=="viewer")return;if(pr.isMe&&pr.sameTab){myPe
   if(st!=="walk"){p.pos.copy(p.target);if(isFinite(Number(ps.yaw)))p.yaw=Number(ps.yaw);}
   p.state=st;p.breathing=!!ps.b;p.bs=Number(ps.bs)||0;p.leaving=0;
   const et=Number(ps.et)||0;if(et&&et!==p.lastEt){p.lastEt=et;if(Date.now()-et<6000&&EMOTES[ps.e])playEmote(p,ps.e);}}
-function dropPeer(peer){const p=peers.get(peer);if(p&&!p.leaving)p.leaving=performance.now();}
+function dropPeer(peer){const p=peers.get(peer);if(p&&!p.leaving){p.leaving=performance.now();setCount();}}
 startSupabase({onRoom(r){room=r;setCount();
     r.onPeers(ch=>{ch.peers.forEach(applyPeer);ch.left.forEach(p=>dropPeer(p.peer));const live=new Set(ch.peers.map(p=>p.peer));peers.forEach((v,k)=>{if(!live.has(k))dropPeer(k);});setCount();},()=>{room=null;setCount();});
     r.on("warm",msg=>{const to=msg&&msg.data&&msg.data.to;if(typeof to!=="string")return;
