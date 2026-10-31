@@ -207,10 +207,11 @@ function stopTrack(tr){if(!tr.on)return;tr.on=false;clearInterval(tr.timer);cons
   b.addEventListener("click",()=>{try{if(tr.on)stopTrack(tr);else startTrack(tr);}catch(e){toast("이 브라우저에서는 소리를 만들 수 없어요.");return;}
     b.setAttribute("aria-pressed",String(tr.on));if(tr.on&&timerEnd)restoreMaster();musicStarted=true;store.set("shelter.music",TRACKS.some(t=>t.on)?"on":"off");updateNowPlaying();});
   tr.btn=b;groups[tr.group].append(b);});}
-$("vol").addEventListener("input",()=>{store.set("shelter.vol",$("vol").value);if(master)master.gain.setTargetAtTime(Number($("vol").value),actx.currentTime,.2);});
+$("vol").addEventListener("input",()=>{$("volText").textContent=`${Math.round(Number($("vol").value)*10)} / 10`;store.set("shelter.vol",$("vol").value);if(master)master.gain.setTargetAtTime(Number($("vol").value),actx.currentTime,.2);});
 /* ---------- 지금 흐르는 음악 표시, 기본 음악 ---------- */
 const DEFAULT_TRACK="포근한 앰비언트";let musicStarted=false,lastOn=[];
 try{const v=store.get("shelter.vol");if(v!==null&&isFinite(Number(v)))$("vol").value=v;}catch(e){}
+$("volText").textContent=`${Math.round(Number($("vol").value)*10)} / 10`;
 function updateNowPlaying(){const on=TRACKS.filter(t=>t.on);const np=$("np");np.classList.toggle("playing",on.length>0);
   $("npName").textContent=on.length?on[0].name+(on.length>1?` 외 ${on.length-1}개`:""):(musicStarted?"음악이 꺼져 있어요":"화면을 누르면 음악이 흘러요");
   $("npMute").setAttribute("aria-label",on.length?"음악 끄기":"음악 켜기");
