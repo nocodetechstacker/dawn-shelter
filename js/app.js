@@ -146,11 +146,13 @@ const TRACKS=[
         if(m){tone(tr.out,t,mtof(m),1.9,{gain:.07,attack:.003});tone(tr.out,t,mtof(m+12),.7,{gain:.022,attack:.002});tone(tr.out,t,mtof(m)*2.76,.35,{gain:.008,attack:.002});}
         if(tr.step%16===0)tone(tr.out,t,mtof(57),3,{gain:.04});tr.step++;tr.next+=.5+(Math.random()-.5)*.04;}}}),
   makeTrack({group:"잔잔한 음악",name:"포근한 앰비언트",desc:"구름처럼 번지는 화음",
-    build(tr){const lp=actx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1100;lp.connect(tr.gain);tr.out=lp;tr.ci=0;tr.next=actx.currentTime+.2;},
-    sched(tr,until){const CH=[[50,57,62,66,69],[47,54,59,62,66],[43,50,55,59,62],[45,52,57,61,64]];
-      while(tr.next<until){const t=tr.next;CH[tr.ci%4].forEach((m,i)=>{[0,7].forEach(dt=>{const o=actx.createOscillator();o.type=i<2?"sine":"triangle";o.frequency.value=mtof(m);o.detune.value=dt-3;
-          const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.022,t+3);g.gain.linearRampToValueAtTime(.018,t+7.5);g.gain.linearRampToValueAtTime(0,t+11);
-          o.connect(g);g.connect(tr.out);o.start(t);o.stop(t+11.2);});});tr.ci++;tr.next+=8;}}}),
+    build(tr){const lp=actx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=2600;lp.connect(tr.gain);tr.out=lp;tr.ci=0;tr.next=actx.currentTime+.05;},
+    sched(tr,until){const CH=[[50,62,66,69,74],[47,59,62,66,71],[43,59,62,67,71],[45,57,61,64,69]];
+      while(tr.next<until){const t=tr.next;CH[tr.ci%4].forEach((m,i)=>{[0,7].forEach(dt=>{const o=actx.createOscillator();o.type=i===0?"sine":"triangle";o.frequency.value=mtof(m);o.detune.value=dt-3;
+          const peak=i===0?.04:.085;const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+1.4);g.gain.linearRampToValueAtTime(peak*.8,t+7.5);g.gain.linearRampToValueAtTime(0,t+10.5);
+          o.connect(g);g.connect(tr.out);o.start(t);o.stop(t+10.7);});});
+        tone(tr.out,t+.6+Math.random()*3,mtof(CH[tr.ci%4][4]+12),4,{gain:.05,attack:.02});
+        tr.ci++;tr.next+=8;}}}),
   makeTrack({group:"잔잔한 음악",name:"싱잉볼",desc:"오래 울리다 사라지는 명상 종",
     build(tr){tr.next=actx.currentTime+.4;},
     sched(tr,until){while(tr.next<until){const t=tr.next;const f=pickR([196,220,174.6]);
@@ -219,8 +221,16 @@ function startDefaultMusic(){if(musicStarted)return;musicStarted=true;
   if(store.get("shelter.music")==="off"){updateNowPlaying();return;}
   const tr=TRACKS.find(t=>t.name===DEFAULT_TRACK);if(tr)setTrackOn(tr,true);updateNowPlaying();
   $("np").classList.add("intro");setTimeout(()=>$("np").classList.remove("intro"),6200);
-  setTimeout(()=>toast("포근한 앰비언트가 작게 흘러요 · 오른쪽 음악 표시로 바꿀 수 있어요",5200),400);}
-["pointerdown","keydown","touchstart"].forEach(ev=>addEventListener(ev,()=>{if(!musicStarted)startDefaultMusic();},{capture:true,passive:true}));
+  setTimeout(()=>toast("포근한 앰비언트가 잔잔하게 흘러요 · 오른쪽 음악 표시로 바꿀 수 있어요",5200),400);}
+let unlockEl=null;
+function silentWav(){const sr=8000,n=sr/2,b=new ArrayBuffer(44+n*2),v=new DataView(b);const w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+  w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
+  return URL.createObjectURL(new Blob([b],{type:"audio/wav"}));}
+function unlockAudio(){try{if(!unlockEl){unlockEl=new Audio(silentWav());unlockEl.loop=true;unlockEl.setAttribute("playsinline","");unlockEl.volume=.01;}
+    const p=unlockEl.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}
+  if(actx&&actx.state!=="running"){try{actx.resume();}catch(e){}}}
+["pointerdown","pointerup","touchend","click","keydown"].forEach(ev=>addEventListener(ev,()=>{unlockAudio();if(!musicStarted)startDefaultMusic();else if(actx&&actx.state!=="running"&&TRACKS.some(t=>t.on)){try{actx.resume();}catch(e){}}},{capture:true,passive:true}));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&actx&&actx.state!=="running"&&TRACKS.some(t=>t.on)){try{actx.resume();}catch(e){}}});
 $("npMain").addEventListener("click",()=>togglePanel("pMusic"));
 $("npMute").addEventListener("click",e=>{e.stopPropagation();const on=TRACKS.filter(t=>t.on);
   if(on.length){lastOn=on;on.forEach(t=>setTrackOn(t,false));store.set("shelter.music","off");}
