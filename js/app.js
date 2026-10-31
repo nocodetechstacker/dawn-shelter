@@ -1,5 +1,9 @@
 (function(){
 "use strict";
+/* 새 버전이 배포되면 오래된 화면 대신 최신 화면을 불러오기 */
+const BUILD="202611010052";
+(async()=>{try{const r=await fetch("version.txt?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const nv=(await r.text()).trim();
+  if(nv&&nv!==BUILD){const u=new URL(location.href);if(u.searchParams.get("v")!==nv){u.searchParams.set("v",nv);location.replace(u.toString());}}}catch(e){}})();
 const $=id=>document.getElementById(id);
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const toastEl=$("toast");let toastT;
