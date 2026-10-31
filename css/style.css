@@ -144,6 +144,11 @@ label.inline{display:flex;gap:10px;align-items:center;font-size:14px;}
 .tools button.playing[aria-pressed="true"]::after{background:#1c1306;}
 @keyframes npDot{50%{opacity:.3;}}
 @media (prefers-reduced-motion:reduce){.np.playing .eq i,.np.intro,.tools button.playing::after{animation:none;}.np.playing .eq i{height:70%;}}
+.skynav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(132px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:4px;padding:5px 6px 5px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);white-space:nowrap;max-width:calc(100vw - 32px);}
+.skynav button{padding:6px 13px;border-radius:999px;font-size:13.5px;}
+.skynav button:hover{background:var(--amber-soft);}
+.skynav button[aria-pressed="true"]{background:var(--amber);color:#1c1306;}
+.boatchip{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(132px + env(safe-area-inset-bottom,0px));border-color:rgba(159,183,217,.55);color:#dbe6f7;}
 .zoom{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:grid;gap:6px;}
 .zoom button{width:40px;height:40px;border-radius:50%;background:var(--glass);border:1px solid var(--line);display:grid;place-items:center;color:var(--ink);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
 .zoom button:hover{background:var(--amber-soft);}

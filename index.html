@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap">
-<link rel="stylesheet" href="css/style.css?v=202611010021">
+<link rel="stylesheet" href="css/style.css?v=202611010045">
 </head>
 <body>
 <canvas id="scene" aria-label="모닥불과 큰 나무가 있는 밤의 풀밭. 땅을 누르면 내 캐릭터가 그쪽으로 걸어갑니다."></canvas>
@@ -51,6 +51,10 @@
 
 <div class="center-msg" id="breath" hidden><div class="big" id="bPhase">들이쉬기</div><div class="sub" id="bSec">4</div></div>
 <div class="center-msg" id="sheepMsg" hidden><div class="big" id="sheepCount">양 한 마리</div><div class="sub">천천히 따라 세어 보세요</div></div>
+<div class="skynav" id="skyNav" hidden role="group" aria-label="하늘 방향">
+  <span class="small">어느 하늘을 볼까요</span><button data-dir="moon">달</button><button data-dir="aurora">오로라</button><button data-dir="galaxy">별구름</button><button data-dir="sea">바다</button>
+</div>
+<button class="chip boatchip" id="boatBtn" hidden>작은 배 타고 바다로 나가기</button>
 <button class="chip wish" id="wishBtn" hidden>별똥별이 떨어졌어요 · 소원 빌기</button>
 
 <template id="xTpl"><button class="x" aria-label="닫기"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13"/></svg></button></template>
@@ -141,7 +145,7 @@
   <div class="seg" id="weathers">
     <button data-w="clear" aria-pressed="true">맑은 밤</button><button data-w="snow" aria-pressed="false">함박눈</button><button data-w="rain" aria-pressed="false">보슬비</button><button data-w="petal" aria-pressed="false">꽃잎</button>
   </div>
-  <label class="inline" for="auroraOn"><input type="checkbox" id="auroraOn" checked> 북쪽 하늘에 오로라 띄우기</label>
+  <label class="inline" for="auroraOn"><input type="checkbox" id="auroraOn" checked> 동쪽 하늘에 오로라 띄우기</label>
 </section>
 
 <section class="panel" id="pLook" hidden>
@@ -198,8 +202,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=202611010021"></script>
-<script src="js/stories.js?v=202611010021"></script>
-<script src="js/app.js?v=202611010021"></script>
+<script src="js/config.js?v=202611010045"></script>
+<script src="js/stories.js?v=202611010045"></script>
+<script src="js/app.js?v=202611010045"></script>
 </body>
 </html>
