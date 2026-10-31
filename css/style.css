@@ -149,6 +149,12 @@ label.inline{display:flex;gap:10px;align-items:center;font-size:14px;}
 .skynav button:hover{background:var(--amber-soft);}
 .skynav button[aria-pressed="true"]{background:var(--amber);color:#1c1306;}
 .boatchip{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(132px + env(safe-area-inset-bottom,0px));border-color:rgba(159,183,217,.55);color:#dbe6f7;}
+.policy{border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+.policy summary{cursor:pointer;font-family:var(--f-display);font-size:15px;color:var(--ink);}
+.policy summary::marker{color:var(--amber);}
+.policy ul{margin:8px 0 0;padding-left:18px;display:grid;gap:7px;font-size:13.5px;line-height:1.65;color:var(--muted);word-break:keep-all;}
+.policy b{color:var(--ink);font-weight:400;}
+.policy a{color:var(--amber);}
 .zoom{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:grid;gap:6px;}
 .zoom button{width:40px;height:40px;border-radius:50%;background:var(--glass);border:1px solid var(--line);display:grid;place-items:center;color:var(--ink);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
 .zoom button:hover{background:var(--amber-soft);}

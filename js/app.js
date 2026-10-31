@@ -26,6 +26,8 @@ let userDim=0,sleepDim=0;
 function applyDim(){$("dim").style.opacity=String(Math.max(userDim,sleepDim));}
 $("dimR").addEventListener("input",e=>{userDim=Number(e.target.value);applyDim();});
 const segPick=(wrap,btn)=>wrap.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===btn)));
+$("policyLink").addEventListener("click",()=>{openPanel("pInfo");$("policy").open=true;setTimeout(()=>{try{$("policy").scrollIntoView({block:"start",behavior:"smooth"});}catch(e){}},60);});
+
 /* ---------- 처음 온 사람을 위한 안내 ---------- */
 const TOUR=[
  {t:"어서 와요, 정말 반가워요",b:"잠이 오지 않는 밤이죠? 괜찮아요. 여기는 같은 밤을 보내는 사람들이 조용히 머물다 가는 작은 쉼터예요. 제가 천천히 둘러보는 법을 알려 드릴게요. 1분이면 충분해요."},

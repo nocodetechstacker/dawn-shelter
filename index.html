@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap">
-<link rel="stylesheet" href="css/style.css?v=202611010045">
+<link rel="stylesheet" href="css/style.css?v=202611010049">
 </head>
 <body>
 <canvas id="scene" aria-label="모닥불과 큰 나무가 있는 밤의 풀밭. 땅을 누르면 내 캐릭터가 그쪽으로 걸어갑니다."></canvas>
@@ -121,6 +121,7 @@
     <p>누구에게도 하지 못한 이야기를 여기 내려놓아요. 이름 없이 올라가고, 다른 사람들이 안아 주거나 따뜻한 답장을 남길 수 있어요.</p>
     <textarea id="stText" rows="5" maxlength="1000" placeholder="오늘 마음에 걸린 일, 잠 못 들게 하는 생각을 편하게 적어 주세요."></textarea>
     <div class="row"><span class="small" id="stState">0 / 1000</span><button class="btn" id="stGo">사연 올리기</button></div>
+    <button class="link" id="policyLink" type="button" style="justify-self:start">글과 기록은 이렇게 다뤄져요 ›</button>
     <p class="small">마음이 많이 위태롭다면 109(자살예방상담, 24시간)나 1577-0199(정신건강 위기상담)에서 바로 이야기를 들어 줘요.</p>
     <div class="list" id="stList"><div class="empty">아직 올라온 사연이 없어요.</div></div>
   </div>
@@ -160,6 +161,18 @@
 <section class="panel info" id="pInfo" hidden>
   <div class="ph"><h2>이 쉼터에 대해</h2></div>
   <p>지금 이 페이지를 열어 둔 사람마다 작은 캐릭터가 하나씩 생겨요. 머리 위에 반딧불이 맴도는 캐릭터는 혼자일 때도 곁에 있어 주는 숲 친구들이에요. 토닥임과 표현은 그 순간만 전해지고, 등불·방명록·사연은 남아요.</p>
+  <details class="policy" id="policy">
+    <summary>이 쉼터가 지키는 약속</summary>
+    <ul>
+      <li><b>이름을 묻지 않아요.</b> 이름, 이메일, 전화번호를 받지 않아요. 브라우저마다 익명 번호가 저절로 만들어지고, 다른 사람 화면에는 "다녀간 이웃", "익명의 사연"으로만 보여요.</li>
+      <li><b>저장되는 것:</b> 나무에 건 등불, 방명록, 사연과 답장, 안아 주기, 신고, 그리고 방문자 수와 머문 시간을 세기 위한 날짜별 방문 기록이에요.</li>
+      <li><b>저장되지 않는 것:</b> 걱정 태우기와 소원은 어디에도 보내지 않아요. 걷기·표현·토닥이기는 그 순간에만 전해지고 남지 않아요. 음악, 날씨, 화면 밝기 같은 설정은 내 기기에만 저장돼요.</li>
+      <li><b>내 글은 내가 지울 수 있어요.</b> 지우면 바로 삭제돼요. 브라우저 기록을 지우면 내 글을 알아볼 수 없게 되니, 그 뒤에 지우고 싶은 글이 있으면 신고해 주세요.</li>
+      <li><b>함께 지키는 규칙:</b> 혐오, 괴롭힘, 광고, 다른 사람의 개인정보가 담긴 글은 가려요. 서로 다른 세 사람이 신고한 글은 자동으로 가려지고, 운영자가 다시 살펴봐요.</li>
+      <li><b>보관과 쓰임:</b> 글은 직접 지우거나 운영자가 정리하기 전까지 보관돼요. 모인 글과 기록을 광고나 판매에 쓰지 않아요. 다만 이 페이지를 운영하는 호스팅 서비스(GitHub, Supabase)가 접속 기록(IP 주소 등)을 운영을 위해 일정 기간 보관할 수 있어요.</li>
+      <li><b>문의:</b> 궁금한 점이나 지워 달라는 요청은 <a href="https://github.com/nocodetechstacker/dawn-shelter/issues" target="_blank" rel="noopener">GitHub 문의 게시판</a>에 남겨 주세요. 개인적인 내용은 적지 말아 주세요.</li>
+    </ul>
+  </details>
   <label class="inline" for="dimR">화면 어둡게 <input type="range" id="dimR" min="0" max="0.7" step="0.01" value="0"></label>
   <label class="inline" for="moonOn"><input type="checkbox" id="moonOn" checked> 달님의 응원 메시지 보기</label>
   <button class="btn ghost" id="tourAgain" style="justify-self:start">사용법 다시 보기</button>
@@ -202,8 +215,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=202611010045"></script>
-<script src="js/stories.js?v=202611010045"></script>
-<script src="js/app.js?v=202611010045"></script>
+<script src="js/config.js?v=202611010049"></script>
+<script src="js/stories.js?v=202611010049"></script>
+<script src="js/app.js?v=202611010049"></script>
 </body>
 </html>
