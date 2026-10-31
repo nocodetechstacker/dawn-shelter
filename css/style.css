@@ -98,7 +98,7 @@ label.inline{display:flex;gap:10px;align-items:center;font-size:14px;}
 .empty{padding:14px;text-align:center;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:12px;}
 .pop{position:fixed;transform:translate(-50%,-115%);background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:6px;min-width:150px;max-width:260px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
 .pop .txt{font-family:var(--f-display);font-size:15px;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere;}
-.toast{position:fixed;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-size:14px;transition:opacity .6s;pointer-events:none;max-width:88vw;text-align:center;z-index:5;}
+.toast{position:fixed;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:9px 18px;font-size:14px;line-height:1.5;transition:opacity .6s;pointer-events:none;max-width:min(88vw,460px);width:max-content;box-sizing:border-box;text-align:center;word-break:keep-all;z-index:5;}
 .toast.hide{opacity:0;}
 .wish{position:fixed;left:50%;top:calc(130px + env(safe-area-inset-top,0px));transform:translateX(-50%);}
 .info dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;}
@@ -122,6 +122,28 @@ label.inline{display:flex;gap:10px;align-items:center;font-size:14px;}
 .tour-hi{outline:2px solid var(--amber)!important;outline-offset:3px;animation:tourPulse 1.6s ease-in-out infinite;}
 @keyframes tourPulse{50%{outline-color:rgba(244,180,106,.2);}}
 @media (prefers-reduced-motion:reduce){.tour-hi{animation:none;}}
+.np{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:calc(50% + 84px);display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.np-main{display:flex;align-items:center;gap:10px;padding:5px 12px 5px 9px;border-radius:999px;text-align:left;}
+.np-main:hover{background:var(--amber-soft);}
+.np-txt{display:grid;line-height:1.35;}
+.np-name{font-size:13px;color:var(--ink);max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.np-sub{font-size:11.5px;color:var(--amber);}
+.np-mute{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted);}
+.np-mute:hover{background:var(--amber-soft);color:var(--ink);}
+.np-mute svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.eq{display:flex;align-items:flex-end;gap:2px;width:16px;height:14px;flex:none;}
+.eq i{flex:1;height:30%;border-radius:1px;background:var(--muted);}
+.np.playing .eq i{background:var(--amber);animation:eqb 1.1s ease-in-out infinite;}
+.np.playing .eq i:nth-child(2){animation-delay:-.35s;animation-duration:.9s;}
+.np.playing .eq i:nth-child(3){animation-delay:-.7s;animation-duration:1.25s;}
+.np.playing .eq i:nth-child(4){animation-delay:-.2s;animation-duration:1s;}
+@keyframes eqb{0%,100%{height:25%;}50%{height:100%;}}
+.np.intro{animation:npGlow 1.5s ease-in-out 4;}
+@keyframes npGlow{50%{box-shadow:0 0 0 4px rgba(244,180,106,.32),0 0 26px rgba(244,180,106,.45);}}
+.tools button.playing::after{content:"";display:inline-block;width:6px;height:6px;margin-left:6px;border-radius:50%;background:var(--amber);vertical-align:middle;animation:npDot 1.4s ease-in-out infinite;}
+.tools button.playing[aria-pressed="true"]::after{background:#1c1306;}
+@keyframes npDot{50%{opacity:.3;}}
+@media (prefers-reduced-motion:reduce){.np.playing .eq i,.np.intro,.tools button.playing::after{animation:none;}.np.playing .eq i{height:70%;}}
 .zoom{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:grid;gap:6px;}
 .zoom button{width:40px;height:40px;border-radius:50%;background:var(--glass);border:1px solid var(--line);display:grid;place-items:center;color:var(--ink);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
 .zoom button:hover{background:var(--amber-soft);}

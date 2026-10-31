@@ -203,15 +203,37 @@ function stopTrack(tr){if(!tr.on)return;tr.on=false;clearInterval(tr.timer);cons
   const b=document.createElement("button");b.className="track";b.setAttribute("aria-pressed","false");
   const nm=document.createElement("b");nm.textContent=tr.name;const ds=document.createElement("span");ds.textContent=tr.desc;b.append(nm,ds);
   b.addEventListener("click",()=>{try{if(tr.on)stopTrack(tr);else startTrack(tr);}catch(e){toast("이 브라우저에서는 소리를 만들 수 없어요.");return;}
-    b.setAttribute("aria-pressed",String(tr.on));if(tr.on&&timerEnd)restoreMaster();});
+    b.setAttribute("aria-pressed",String(tr.on));if(tr.on&&timerEnd)restoreMaster();musicStarted=true;store.set("shelter.music",TRACKS.some(t=>t.on)?"on":"off");updateNowPlaying();});
   tr.btn=b;groups[tr.group].append(b);});}
-$("vol").addEventListener("input",()=>{if(master)master.gain.setTargetAtTime(Number($("vol").value),actx.currentTime,.2);});
+$("vol").addEventListener("input",()=>{store.set("shelter.vol",$("vol").value);if(master)master.gain.setTargetAtTime(Number($("vol").value),actx.currentTime,.2);});
+/* ---------- 지금 흐르는 음악 표시, 기본 음악 ---------- */
+const DEFAULT_TRACK="포근한 앰비언트";let musicStarted=false,lastOn=[];
+try{const v=store.get("shelter.vol");if(v!==null&&isFinite(Number(v)))$("vol").value=v;}catch(e){}
+function updateNowPlaying(){const on=TRACKS.filter(t=>t.on);const np=$("np");np.classList.toggle("playing",on.length>0);
+  $("npName").textContent=on.length?on[0].name+(on.length>1?` 외 ${on.length-1}개`:""):(musicStarted?"음악이 꺼져 있어요":"화면을 누르면 음악이 흘러요");
+  $("npMute").setAttribute("aria-label",on.length?"음악 끄기":"음악 켜기");
+  $("npIcon").innerHTML=on.length?'<path d="M3 8v4h3l4 3V5L6 8H3z"/><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"/>':'<path d="M3 8v4h3l4 3V5L6 8H3z"/><path d="M13 8l4 4M17 8l-4 4"/>';
+  document.querySelectorAll('.tools [data-p="pMusic"]').forEach(b=>b.classList.toggle("playing",on.length>0));}
+function setTrackOn(tr,on){try{if(on&&!tr.on)startTrack(tr);else if(!on&&tr.on)stopTrack(tr);}catch(e){return;}tr.btn.setAttribute("aria-pressed",String(tr.on));}
+function startDefaultMusic(){if(musicStarted)return;musicStarted=true;
+  if(store.get("shelter.music")==="off"){updateNowPlaying();return;}
+  const tr=TRACKS.find(t=>t.name===DEFAULT_TRACK);if(tr)setTrackOn(tr,true);updateNowPlaying();
+  $("np").classList.add("intro");setTimeout(()=>$("np").classList.remove("intro"),6200);
+  setTimeout(()=>toast("포근한 앰비언트가 작게 흘러요 · 오른쪽 음악 표시로 바꿀 수 있어요",5200),400);}
+["pointerdown","keydown","touchstart"].forEach(ev=>addEventListener(ev,()=>{if(!musicStarted)startDefaultMusic();},{capture:true,passive:true}));
+$("npMain").addEventListener("click",()=>togglePanel("pMusic"));
+$("npMute").addEventListener("click",e=>{e.stopPropagation();const on=TRACKS.filter(t=>t.on);
+  if(on.length){lastOn=on;on.forEach(t=>setTrackOn(t,false));store.set("shelter.music","off");}
+  else{const list=lastOn.length?lastOn:[TRACKS.find(t=>t.name===DEFAULT_TRACK)];list.forEach(t=>setTrackOn(t,true));store.set("shelter.music","on");if(timerEnd)restoreMaster();}
+  musicStarted=true;updateNowPlaying();});
+updateNowPlaying();
+
 let timerEnd=0;
 function restoreMaster(){if(master)master.gain.setTargetAtTime(Number($("vol").value),actx.currentTime,.3);}
 $("timer").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{segPick($("timer"),b);const m=Number(b.dataset.m);timerEnd=m?Date.now()+m*60000:0;restoreMaster();updTimer();}));
 function updTimer(){if(!timerEnd){$("timerState").textContent="";return;}
   const left=timerEnd-Date.now();
-  if(left<=0){TRACKS.forEach(tr=>{stopTrack(tr);tr.btn.setAttribute("aria-pressed","false");});timerEnd=0;
+  if(left<=0){TRACKS.forEach(tr=>{stopTrack(tr);tr.btn.setAttribute("aria-pressed","false");});timerEnd=0;updateNowPlaying();
     segPick($("timer"),$("timer").querySelector('[data-m="0"]'));$("timerState").textContent="음악을 껐어요. 편히 자요.";restoreMaster();return;}
   if(left<120000&&master)master.gain.setTargetAtTime(Number($("vol").value)*left/120000,actx.currentTime,1);
   $("timerState").textContent=`${Math.ceil(left/60000)}분 뒤 천천히 꺼져요`;}
