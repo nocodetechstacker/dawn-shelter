@@ -313,7 +313,7 @@ function makeRoom(client){const ch=client.channel("shelter-lobby",{config:{prese
     onPeers(fn){H.peers.push(fn);},on(topic,fn){(H.topics[topic]=H.topics[topic]||[]).push(fn);}};}
 async function startSupabase(hooks){
   if(!CONFIGURED){["noteState","gbState","stState"].forEach(id=>{$(id).textContent="아직 저장 공간이 연결되지 않았어요";});return;}
-  const client=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true}});
+  const client=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{db:{schema:"shelter"},auth:{persistSession:true,autoRefreshToken:true,storageKey:"dawn-shelter-auth"}});
   db=client;
   try{let {data:{session}}=await client.auth.getSession();
     if(!session){const r=await client.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session;}
@@ -322,11 +322,11 @@ async function startSupabase(hooks){
   if(myId){try{const {data}=await client.from("admins").select("user_id").eq("user_id",myId);isOwner=!!(data&&data.length);}catch(e){}}
   ["lanterns","guestbook","stories"].forEach(refresh);
   client.channel("shelter-db")
-    .on("postgres_changes",{event:"*",schema:"public",table:"lanterns"},()=>refreshSoon("lanterns"))
-    .on("postgres_changes",{event:"*",schema:"public",table:"guestbook"},()=>refreshSoon("guestbook"))
-    .on("postgres_changes",{event:"*",schema:"public",table:"stories"},()=>refreshSoon("stories"))
-    .on("postgres_changes",{event:"*",schema:"public",table:"replies"},()=>refreshSoon("stories"))
-    .on("postgres_changes",{event:"*",schema:"public",table:"hugs"},()=>refreshSoon("stories"))
+    .on("postgres_changes",{event:"*",schema:"shelter",table:"lanterns"},()=>refreshSoon("lanterns"))
+    .on("postgres_changes",{event:"*",schema:"shelter",table:"guestbook"},()=>refreshSoon("guestbook"))
+    .on("postgres_changes",{event:"*",schema:"shelter",table:"stories"},()=>refreshSoon("stories"))
+    .on("postgres_changes",{event:"*",schema:"shelter",table:"replies"},()=>refreshSoon("stories"))
+    .on("postgres_changes",{event:"*",schema:"shelter",table:"hugs"},()=>refreshSoon("stories"))
     .subscribe();
   setInterval(()=>{["lanterns","guestbook","stories"].forEach(refreshSoon);},90000);
   if(hooks)hooks.onRoom(makeRoom(client));}

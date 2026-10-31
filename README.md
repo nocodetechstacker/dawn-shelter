@@ -33,8 +33,8 @@ supabase/schema.sql 데이터베이스 설정 (테이블, 보안 규칙, 도배 
 
 ## 처음 설정하기
 
-1. **익명 로그인 켜기:** Supabase 대시보드 → Authentication → Sign In / Providers → *Allow anonymous sign-ins* 를 켜요.
-2. **데이터베이스 만들기:** SQL Editor 에 `supabase/schema.sql` 전체를 붙여 넣고 Run 해요. 여러 번 실행해도 안전해요.
+1. **익명 로그인 켜기:** Supabase 대시보드 → Authentication → Sign In / Providers → *Allow anonymous sign-ins* 를 켜요. 다른 서비스와 같은 프로젝트를 쓴다면, 먼저 기존 테이블의 보안 규칙이 익명 사용자를 막는지 확인하세요.
+2. **데이터베이스 만들기:** SQL Editor 에 `supabase/schema.sql` 전체를 붙여 넣고 Run 해요. 쉼터 데이터는 별도 스키마 `shelter` 에 만들어져 기존 `public` 테이블과 섞이지 않아요. 실행 후 Project Settings → Data API → *Exposed schemas* 에 `shelter` 를 추가해요.
 3. **키 넣기:** Project Settings → API Keys 의 *Publishable key*(`sb_publishable_…`)를 `js/config.js` 의 `supabaseKey` 에 넣어요. 공개용 키라 저장소에 올려도 괜찮아요. `service_role`·secret 키는 절대 넣지 마세요.
 4. **GitHub Pages 켜기:** 저장소 Settings → Pages → Branch `main` / `/(root)` 로 저장해요.
 
