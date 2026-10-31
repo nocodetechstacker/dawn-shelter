@@ -326,6 +326,17 @@ function renderStories(){const list=$("stList");
       if(error)toast(errMsg(error,"보내지"));else{replyDrafts.delete(key);ta.value="";refresh("stories");}send.disabled=false;});
     form.append(ta,send);e.append(form);list.append(e);if(focusK===key)ta.focus();});}
 
+
+/* ---------- 방문자 수와 함께 머문 시간 ---------- */
+const nf=n=>Number(n||0).toLocaleString("ko-KR");
+function fmtDur(sec){sec=Math.max(0,Math.floor(Number(sec)||0));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
+  if(h>=100)return `${nf(h)}시간`;if(h>0)return `${h}시간 ${m}분`;return `${m}분`;}
+function showStats(d){if(!d||typeof d!=="object")return;
+  $("stats").textContent=`지금까지 ${nf(d.visitors)}명이 다녀갔어요 · 함께 머문 시간 ${fmtDur(d.seconds)}`;$("stats").hidden=false;
+  $("stToday").textContent=`${nf(d.today)}명`;$("stAll").textContent=`${nf(d.visitors)}명`;$("stTime").textContent=fmtDur(d.seconds);$("stMine").textContent=fmtDur(d.mine_today);$("statsDl").hidden=false;}
+async function pingStats(){if(!db)return;const visible=document.visibilityState==="visible";
+  const {data,error}=await db.rpc(myId&&visible?"heartbeat":"stats");if(!error)showStats(data);}
+
 /* ---------- Supabase 연결 (익명 로그인, 실시간 방, 저장소) ---------- */
 const PEER=Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 function makeRoom(client){const ch=client.channel("shelter-lobby",{config:{presence:{key:PEER},broadcast:{self:true}}});
@@ -357,6 +368,8 @@ async function startSupabase(hooks){
     .on("postgres_changes",{event:"*",schema:"shelter",table:"hugs"},()=>refreshSoon("stories"))
     .subscribe();
   setInterval(()=>{["lanterns","guestbook","stories"].forEach(refreshSoon);},90000);
+  pingStats();setInterval(pingStats,60000);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pingStats();});
   if(hooks)hooks.onRoom(makeRoom(client));}
 
 /* =========================================================

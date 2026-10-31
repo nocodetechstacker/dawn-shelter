@@ -23,6 +23,7 @@
   <h1>새벽 쉼터</h1>
   <div class="clock" id="clock">--:--</div>
   <div class="count" id="count">숲 친구들과 함께 있어요</div>
+  <div class="stats" id="stats" hidden></div>
 </div>
 
 <div class="topright">
@@ -153,6 +154,7 @@
   <label class="inline" for="moonOn"><input type="checkbox" id="moonOn" checked> 달님의 응원 메시지 보기</label>
   <button class="btn ghost" id="tourAgain" style="justify-self:start">사용법 다시 보기</button>
   <p>누워 있으면 1분 뒤부터 화면이 조금씩 어두워져요. 잠 못 드는 밤이 길게 이어지거나 마음이 많이 힘들면 혼자 견디지 않아도 돼요.</p>
+  <dl id="statsDl" hidden><dt>오늘 다녀간 사람</dt><dd id="stToday">-</dd><dt>지금까지 다녀간 사람</dt><dd id="stAll">-</dd><dt>모두 함께 머문 시간</dt><dd id="stTime">-</dd><dt>오늘 내가 머문 시간</dt><dd id="stMine">-</dd></dl>
   <dl><dt>자살예방상담</dt><dd>109 (24시간)</dd><dt>정신건강 위기상담</dt><dd>1577-0199 (24시간)</dd></dl>
   <p class="small">관리자 등록용 번호: <span id="myIdText" style="user-select:all;word-break:break-all">연결 전</span></p>
   <p class="small">새벽 쉼터는 <a href="https://github.com/nocodetechstacker/dawn-shelter" target="_blank" rel="noopener" style="color:var(--amber)">GitHub</a>에 공개된 작은 프로젝트예요.</p>
