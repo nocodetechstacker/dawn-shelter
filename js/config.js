@@ -7,5 +7,5 @@
  */
 window.SHELTER_CONFIG = {
   supabaseUrl: "https://fuzikvijizbxxvnglmet.supabase.co",
-  supabaseKey: "여기에_publishable_key_를_넣으세요"
+  supabaseKey: "sb_publishable__PHDlcndD3zf-DBaIAluLw_hiyYNY_I"
 };

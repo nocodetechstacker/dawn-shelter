@@ -29,7 +29,7 @@ js/config.js        Supabase 연결 설정
 supabase/schema.sql 데이터베이스 설정 (테이블, 보안 규칙, 도배 방지, 신고 자동 숨김)
 ```
 
-빌드 과정이 없어요. 정적 파일만으로 동작하고, 라이브러리는 CDN에서 불러와요(three.js r128, supabase-js 2.45.4).
+빌드 과정이 없어요. 정적 파일만으로 동작하고, 라이브러리는 CDN에서 불러와요(three.js r128, supabase-js 2.117.3).
 
 ## 처음 설정하기
 
