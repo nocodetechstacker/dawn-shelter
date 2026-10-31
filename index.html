@@ -151,12 +151,22 @@
   <p>지금 이 페이지를 열어 둔 사람마다 작은 캐릭터가 하나씩 생겨요. 머리 위에 반딧불이 맴도는 캐릭터는 혼자일 때도 곁에 있어 주는 숲 친구들이에요. 토닥임과 표현은 그 순간만 전해지고, 등불·방명록·사연은 남아요.</p>
   <label class="inline" for="dimR">화면 어둡게 <input type="range" id="dimR" min="0" max="0.7" step="0.01" value="0"></label>
   <label class="inline" for="moonOn"><input type="checkbox" id="moonOn" checked> 달님의 응원 메시지 보기</label>
+  <button class="btn ghost" id="tourAgain" style="justify-self:start">사용법 다시 보기</button>
   <p>누워 있으면 1분 뒤부터 화면이 조금씩 어두워져요. 잠 못 드는 밤이 길게 이어지거나 마음이 많이 힘들면 혼자 견디지 않아도 돼요.</p>
   <dl><dt>자살예방상담</dt><dd>109 (24시간)</dd><dt>정신건강 위기상담</dt><dd>1577-0199 (24시간)</dd></dl>
   <p class="small">관리자 등록용 번호: <span id="myIdText" style="user-select:all;word-break:break-all">연결 전</span></p>
   <p class="small">새벽 쉼터는 <a href="https://github.com/nocodetechstacker/dawn-shelter" target="_blank" rel="noopener" style="color:var(--amber)">GitHub</a>에 공개된 작은 프로젝트예요.</p>
 </section>
 
+<div class="tour" id="tour" hidden>
+  <div class="tour-card" role="dialog" aria-modal="false" aria-labelledby="tourTitle">
+    <div class="tour-who">숲 요정의 안내 · <span id="tourStep"></span></div>
+    <h2 id="tourTitle"></h2>
+    <p id="tourBody"></p>
+    <div class="tour-foot"><div class="tour-dots" id="tourDots"></div>
+      <div class="seg"><button class="link" id="tourSkip">건너뛰기</button><button class="btn ghost" id="tourPrev">이전</button><button class="btn" id="tourNext">다음</button></div></div>
+  </div>
+</div>
 <div class="pop" id="pop" hidden></div>
 <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 <div id="nogl" hidden>이 기기에서는 3D 장면을 그릴 수 없어요.<br>음악과 숨 고르기는 아래에서 그대로 쓸 수 있어요.</div>
