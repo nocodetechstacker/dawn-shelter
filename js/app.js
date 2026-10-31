@@ -236,7 +236,8 @@ function errMsg(err,what){const m=(err&&(err.message||err.details))||"";
   if(/row-level|permission|JWT|not authenticated/i.test(m))return "지금은 남길 수 없어요. 잠시 뒤 다시 열어 주세요";
   if(/check constraint/i.test(m))return "글자 수를 확인해 주세요";
   return `${what} 못했어요. 다시 눌러 주세요`;}
-function needDb(stateEl){if(!db||!myId){stateEl.textContent=CONFIGURED?"연결하는 중이에요. 잠시 뒤 다시 눌러 주세요":"아직 저장 공간이 연결되지 않았어요";return false;}return true;}
+let authFailed=false;
+function needDb(stateEl){if(!db||!myId){stateEl.textContent=!CONFIGURED?"아직 저장 공간이 연결되지 않았어요":authFailed?"지금은 글을 남길 수 없어요. 읽기만 할 수 있어요":"연결하는 중이에요. 잠시 뒤 다시 눌러 주세요";return false;}return true;}
 async function refresh(table){if(!db)return;
   if(table==="lanterns"){const {data,error}=await db.from("lanterns").select("id,user_id,body,created_at").eq("hidden",false).order("created_at",{ascending:false}).limit(150);if(!error){DATA.lanterns=data||[];onLanternsChanged();}}
   else if(table==="guestbook"){const {data,error}=await db.from("guestbook").select("id,user_id,body,created_at").eq("hidden",false).order("created_at",{ascending:false}).limit(80);if(!error){DATA.guest=data||[];renderGuest();}}
@@ -318,7 +319,7 @@ async function startSupabase(hooks){
   try{let {data:{session}}=await client.auth.getSession();
     if(!session){const r=await client.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session;}
     myId=session.user.id;$("myIdText").textContent=myId;}
-  catch(e){console.warn("익명 로그인 실패",e);["noteState","gbState","stState"].forEach(id=>{$(id).textContent="지금은 글을 남길 수 없어요. 읽기만 할 수 있어요";});}
+  catch(e){authFailed=true;console.warn("익명 로그인 실패",e);["noteState","gbState","stState"].forEach(id=>{$(id).textContent="지금은 글을 남길 수 없어요. 읽기만 할 수 있어요";});}
   if(myId){try{const {data}=await client.from("admins").select("user_id").eq("user_id",myId);isOwner=!!(data&&data.length);}catch(e){}}
   ["lanterns","guestbook","stories"].forEach(refresh);
   client.channel("shelter-db")
