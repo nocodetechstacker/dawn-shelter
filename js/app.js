@@ -435,8 +435,10 @@ const grassMat=new THREE.MeshLambertMaterial({color:0x3f6150});
 
 const TREES=[{x:-7,z:-9,r:3.3,h:4.6},{x:9,z:-11,r:2.6,h:3.8},{x:-13,z:3,r:2.4,h:3.4},{x:12,z:4,r:2.2,h:3.2}];
 const trunkMat=new THREE.MeshLambertMaterial({color:0x4a3628});const leafMat=new THREE.MeshToonMaterial({color:0x2f5a46});
-TREES.forEach(T=>{const tr=new THREE.Mesh(new THREE.CylinderGeometry(.28*T.r/3,.42*T.r/3,T.h,10),trunkMat);tr.position.set(T.x,T.h/2,T.z);scene.add(tr);
-  [[0,0,0,1],[.55,-.35,.2,.72],[-.5,-.3,-.25,.7],[.1,.45,-.1,.66]].forEach(([dx,dy,dz,s])=>{const m=new THREE.Mesh(new THREE.SphereGeometry(T.r*s,18,14),leafMat);m.position.set(T.x+dx*T.r,T.h+dy*T.r,T.z+dz*T.r);scene.add(m);});});
+const treeObjs=[];
+function regTree(x,z,r,h,ms){const tm=trunkMat.clone(),lm=leafMat.clone();ms.forEach(m=>{m.material=m.material===trunkMat?tm:lm;});treeObjs.push({x,z,r,h,mats:[tm,lm],op:1});}
+TREES.forEach(T=>{const tr=new THREE.Mesh(new THREE.CylinderGeometry(.28*T.r/3,.42*T.r/3,T.h,10),trunkMat);tr.position.set(T.x,T.h/2,T.z);scene.add(tr);const ms=[tr];
+  [[0,0,0,1],[.55,-.35,.2,.72],[-.5,-.3,-.25,.7],[.1,.45,-.1,.66]].forEach(([dx,dy,dz,s])=>{const m=new THREE.Mesh(new THREE.SphereGeometry(T.r*s,18,14),leafMat);m.position.set(T.x+dx*T.r,T.h+dy*T.r,T.z+dz*T.r);scene.add(m);ms.push(m);});regTree(T.x,T.z,T.r,T.h,ms);});
 
 /* 마음 우체통 */
 const MAILBOX=new THREE.Vector3(-3.2,0,-6.2);
@@ -581,8 +583,8 @@ const ZONES=[
 const Zp=id=>ZONES.find(z=>z.id===id);
 const lam=c=>new THREE.MeshLambertMaterial({color:c}),toon=c=>new THREE.MeshToonMaterial({color:c});
 const zoneFx=[];
-function addTree(x,z,r,h){mesh(new THREE.CylinderGeometry(.28*r/3,.42*r/3,h,8),trunkMat,x,h/2,z,scene);
-  [[0,0,0,1],[.5,-.3,.2,.7],[-.45,-.25,-.2,.68]].forEach(([dx,dy,dz,s])=>mesh(new THREE.SphereGeometry(r*s,14,10),leafMat,x+dx*r,h+dy*r,z+dz*r,scene));OBST.push({x,z,r:.7});}
+function addTree(x,z,r,h){const ms=[mesh(new THREE.CylinderGeometry(.28*r/3,.42*r/3,h,8),trunkMat,x,h/2,z,scene)];
+  [[0,0,0,1],[.5,-.3,.2,.7],[-.45,-.25,-.2,.68]].forEach(([dx,dy,dz,s])=>ms.push(mesh(new THREE.SphereGeometry(r*s,14,10),leafMat,x+dx*r,h+dy*r,z+dz*r,scene)));regTree(x,z,r,h,ms);OBST.push({x,z,r:.7});}
 function zoneLabel(Z,y){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:bubbleTex(Z.name),transparent:true,depthWrite:false,fog:false}));sp.scale.set(2.6,.87,1);sp.position.set(Z.x,y||4.8,Z.z);scene.add(sp);}
 function glowAt(x,y,z,color,size,base){const g=addSprite(TEX_CORE,{color});g.scale.setScalar(size);g.position.set(x,y,z);scene.add(g);zoneFx.push({s:g,ph:Math.random()*6,base:base||.9});return g;}
 function lightString(a,b,n,sag,colors,size){for(let i=0;i<=n;i++){const f=i/n;const p=new THREE.Vector3().lerpVectors(a,b,f);p.y-=Math.sin(f*Math.PI)*sag;glowAt(p.x,p.y,p.z,pickR(colors),size||.45);}}
@@ -1020,6 +1022,14 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);const t=clock.elapsedTi
   camPos.lerp(wantPos,1-Math.exp(-dt*3));
   tmpV.set(0,sleepCam?.6:1.7,-(sleepCam?3:6)*Math.min(1.2,zoom)).applyAxisAngle(UP,camYaw).add(me.pos);camLook.lerp(tmpV,1-Math.exp(-dt*3));
   camera.position.copy(camPos);camera.lookAt(camLook);
+  // 시야를 가리는 나무는 반투명하게
+  {const cx=camPos.x,cz=camPos.z,dx=me.pos.x-cx,dz=me.pos.z-cz,L2=dx*dx+dz*dz||1;
+   treeObjs.forEach(T=>{let want=1;const u=((T.x-cx)*dx+(T.z-cz)*dz)/L2;
+     if(u>-.05&&u<1.08){const d=Math.hypot(T.x-(cx+dx*u),T.z-(cz+dz*u));if(d<T.r*1.1+.9)want=.15;}
+     if(Math.hypot(T.x-cx,T.z-cz)<T.r+1.5)want=.15;
+     if(Math.abs(want-T.op)<.005&&(T.op===1||T.op===want))return;
+     T.op+=(want-T.op)*Math.min(1,dt*7);if(Math.abs(want-T.op)<.01)T.op=want;const fade=T.op<.99;
+     T.mats.forEach(m=>{m.transparent=fade;m.opacity=T.op;m.depthWrite=!fade;});});}
   // 달님 메시지 위치
   const busyCenter=breathing||sheepOn;
   if(moonOn&&!busyCenter){tmpV.copy(MOON).project(camera);let x=(tmpV.x*.5+.5)*innerWidth,y=(-tmpV.y*.5+.5)*innerHeight;
