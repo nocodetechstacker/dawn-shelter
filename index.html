@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>새벽 쉼터</title>
+<meta name="description" content="잠 못 드는 밤, 귀여운 캐릭터가 되어 모닥불 곁에 모여 걷고 명상하고 눕는 3D 쉼터. 음악, 잠자리 이야기, 방명록과 사연 나누기.">
+<meta name="theme-color" content="#0b1020">
+<meta property="og:title" content="새벽 쉼터">
+<meta property="og:description" content="잠 못 드는 사람들이 함께 머무는 밤의 쉼터">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1020'/%3E%3Ccircle cx='30' cy='30' r='15' fill='%23f6ecd6'/%3E%3Ccircle cx='37' cy='25' r='13' fill='%230b1020'/%3E%3Ccircle cx='44' cy='46' r='5' fill='%23f4b46a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="scene" aria-label="모닥불과 큰 나무가 있는 밤의 풀밭. 땅을 누르면 내 캐릭터가 그쪽으로 걸어갑니다."></canvas>
+<div id="dim"></div>
+
+<div class="hud">
+  <h1>새벽 쉼터</h1>
+  <div class="clock" id="clock">--:--</div>
+  <div class="count" id="count">숲 친구들과 함께 있어요</div>
+</div>
+
+<div class="topright">
+  <button class="chip key" data-p="pBoard" aria-expanded="false">마음 우체통</button>
+  <button class="chip" data-p="pPlaces" aria-expanded="false">장소</button>
+  <button class="chip" data-p="pWeather" aria-expanded="false">날씨</button>
+  <button class="chip" data-p="pLook" aria-expanded="false">내 모습</button>
+  <button class="chip" data-p="pInfo" aria-expanded="false">안내</button>
+</div>
+
+<div class="sky-msg" id="moonMsg" aria-live="polite"><div class="lbl">달님이 띄운 말</div><div class="t" id="moonText"></div></div>
+<div class="med" id="medPhrase" hidden></div>
+<div class="fairy-msg" id="fairyMsg" hidden><div class="who" id="fairyWho"></div><div class="t" id="fairyText"></div></div>
+<div class="hint" id="hint">풀밭을 누르면 걸어가요 · 끌어서 둘러보고, 스크롤이나 +/− 버튼으로 확대·축소해요</div>
+<div class="zoom" role="group" aria-label="화면 확대와 축소">
+  <button id="zIn" aria-label="확대"><svg viewBox="0 0 18 18"><path d="M9 3v12M3 9h12"/></svg></button>
+  <button id="zOut" aria-label="축소"><svg viewBox="0 0 18 18"><path d="M3 9h12"/></svg></button>
+  <button id="zReset" aria-label="시점 처음으로"><svg viewBox="0 0 18 18"><path d="M3.5 9a5.5 5.5 0 1 0 1.6-3.9"/><path d="M3 3v3.2h3.2"/></svg></button>
+</div>
+
+<div class="center-msg" id="breath" hidden><div class="big" id="bPhase">들이쉬기</div><div class="sub" id="bSec">4</div></div>
+<div class="center-msg" id="sheepMsg" hidden><div class="big" id="sheepCount">양 한 마리</div><div class="sub">천천히 따라 세어 보세요</div></div>
+<button class="chip wish" id="wishBtn" hidden>별똥별이 떨어졌어요 · 소원 빌기</button>
+
+<template id="xTpl"><button class="x" aria-label="닫기"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13"/></svg></button></template>
+
+<section class="panel" id="pMusic" hidden>
+  <div class="ph"><h2>음악과 소리</h2></div>
+  <p>화면에서 실시간으로 지어내는 소리라 같은 구간이 반복되지 않아요. 여러 개를 겹쳐 들어도 좋아요.</p>
+  <div id="trackGroups" style="display:grid;gap:6px"></div>
+  <label class="inline" for="vol">크기 <input type="range" id="vol" min="0" max="1" step="0.01" value="0.6"></label>
+  <div class="row"><span class="small">잠들면 천천히 꺼지게</span>
+    <div class="seg" id="timer"><button data-m="0" aria-pressed="true">계속</button><button data-m="15" aria-pressed="false">15분</button><button data-m="30" aria-pressed="false">30분</button><button data-m="60" aria-pressed="false">60분</button></div></div>
+  <span class="small" id="timerState"></span>
+</section>
+
+<section class="panel" id="pBreath" hidden>
+  <div class="ph"><h2>4·7·8 숨 고르기</h2></div>
+  <p>코로 4초 들이쉬고, 7초 머금고, 입으로 8초 길게 내쉬어요. 시작하면 내 캐릭터가 앉아서 같은 박자로 숨을 쉬어요. 네 번이면 충분해요.</p>
+  <div class="row"><span class="small" id="bRounds">0 / 4 회</span><button class="btn" id="bToggle">시작</button></div>
+</section>
+
+<section class="panel" id="pEmote" hidden>
+  <div class="ph"><h2>표현하기</h2></div>
+  <p>함께 있는 사람들에게도 보여요.</p>
+  <div class="grid3" id="emotes">
+    <button data-e="wave">손 흔들기</button><button data-e="yawn">하품</button><button data-e="stretch">기지개</button>
+    <button data-e="heart">하트</button><button data-e="nod">꾸벅꾸벅</button><button data-e="shh">쉿</button>
+  </div>
+</section>
+
+<section class="panel" id="pStory" hidden>
+  <div class="ph"><h2>잠자리 이야기</h2></div>
+  <p>천천히 가라앉는 이야기 100편이 있어요. 배경을 고르고 눈으로 읽거나, 소리 내어 읽어 달라고 해 보세요.</p>
+  <div class="seg" id="themes"></div>
+  <h3 class="story-title" id="storyTitle" hidden></h3>
+  <div class="story" id="storyText" hidden></div>
+  <div class="row"><span class="small" id="storyState"></span>
+    <div class="seg"><button class="btn ghost" id="readBtn" hidden>소리 내어 읽기</button><button class="btn" id="storyGo">이야기 듣기</button></div></div>
+</section>
+
+<section class="panel" id="pWorry" hidden>
+  <div class="ph"><h2>걱정 태우기</h2></div>
+  <p>머릿속을 맴도는 생각을 적어 모닥불에 넣어요. 불꽃이 되어 올라가고, 이 말은 어디에도 저장되지 않아요.</p>
+  <textarea id="worry" rows="3" maxlength="120" placeholder="예: 내일 발표를 망치면 어쩌지"></textarea>
+  <div class="row"><span class="small" id="worryCount">0 / 120</span><button class="btn" id="worryGo">모닥불에 넣기</button></div>
+</section>
+
+<section class="panel" id="pNote" hidden>
+  <div class="ph"><h2>등불 달기</h2></div>
+  <p>오늘 밤 깨어 있는 누군가에게 건넬 한마디를 등불에 적어 나무에 걸어요. 다음에 오는 사람도 등불을 눌러 읽을 수 있어요. 한 사람당 최근 세 개까지 걸려요.</p>
+  <textarea id="note" rows="2" maxlength="80" placeholder="예: 저도 아직 깨어 있어요. 천천히 쉬어요."></textarea>
+  <div class="row"><span class="small" id="noteState">0 / 80</span><button class="btn" id="noteGo">나무에 걸기</button></div>
+</section>
+
+<section class="panel wide" id="pBoard" hidden>
+  <div class="ph"><h2>마음 우체통</h2></div>
+  <div class="seg" id="boardTabs"><button data-tab="guest" aria-pressed="true">방명록</button><button data-tab="story" aria-pressed="false">사연</button></div>
+  <div id="tabGuest" style="display:grid;gap:10px">
+    <p>다녀간 흔적을 짧게 남겨요. 이름 없이 남고, 오늘 밤 깨어 있는 모두가 읽을 수 있어요.</p>
+    <textarea id="gbText" rows="2" maxlength="100" placeholder="예: 새벽 세 시, 저도 여기 있다 가요."></textarea>
+    <div class="row"><span class="small" id="gbState">0 / 100</span><button class="btn" id="gbGo">남기기</button></div>
+    <div class="list" id="gbList"><div class="empty">아직 남겨진 글이 없어요. 첫 흔적을 남겨 주세요.</div></div>
+  </div>
+  <div id="tabStory" style="display:grid;gap:10px" hidden>
+    <p>누구에게도 하지 못한 이야기를 여기 내려놓아요. 이름 없이 올라가고, 다른 사람들이 안아 주거나 따뜻한 답장을 남길 수 있어요.</p>
+    <textarea id="stText" rows="5" maxlength="1000" placeholder="오늘 마음에 걸린 일, 잠 못 들게 하는 생각을 편하게 적어 주세요."></textarea>
+    <div class="row"><span class="small" id="stState">0 / 1000</span><button class="btn" id="stGo">사연 올리기</button></div>
+    <p class="small">마음이 많이 위태롭다면 109(자살예방상담, 24시간)나 1577-0199(정신건강 위기상담)에서 바로 이야기를 들어 줘요.</p>
+    <div class="list" id="stList"><div class="empty">아직 올라온 사연이 없어요.</div></div>
+  </div>
+</section>
+
+<section class="panel" id="pPlaces" hidden>
+  <div class="ph"><h2>장소</h2></div>
+  <p>가고 싶은 곳을 고르면 그쪽으로 걸어가요. 멀리 있을수록 조금 빨리 걸어요.</p>
+  <div class="tracks" id="placeList"></div>
+</section>
+
+<section class="panel" id="pWish" hidden>
+  <div class="ph"><h2>소원 빌기</h2></div>
+  <p>별똥별에게 조용히 말해 보세요. 이 소원은 어디에도 저장되지 않아요.</p>
+  <textarea id="wish" rows="2" maxlength="80" placeholder="예: 오늘은 푹 잘 수 있기를"></textarea>
+  <div class="row"><span></span><button class="btn" id="wishGo">별에게 보내기</button></div>
+</section>
+
+<section class="panel" id="pWeather" hidden>
+  <div class="ph"><h2>날씨</h2></div>
+  <p>내 화면에만 바뀌어요.</p>
+  <div class="seg" id="weathers">
+    <button data-w="clear" aria-pressed="true">맑은 밤</button><button data-w="snow" aria-pressed="false">함박눈</button><button data-w="rain" aria-pressed="false">보슬비</button><button data-w="petal" aria-pressed="false">꽃잎</button>
+  </div>
+</section>
+
+<section class="panel" id="pLook" hidden>
+  <div class="ph"><h2>내 모습</h2></div>
+  <h3>종류</h3><div class="seg" id="species"></div>
+  <h3>몸 색</h3><div class="swatches" id="swatches" role="group" aria-label="몸 색"></div>
+  <h3>머리 장식</h3><div class="seg" id="hats"></div>
+  <h3>들고 있는 것</h3><div class="seg" id="items"></div>
+  <p class="small">이름은 누구에게도 보이지 않아요. 모습만 함께 보여요.</p>
+</section>
+
+<section class="panel info" id="pInfo" hidden>
+  <div class="ph"><h2>이 쉼터에 대해</h2></div>
+  <p>지금 이 페이지를 열어 둔 사람마다 작은 캐릭터가 하나씩 생겨요. 머리 위에 반딧불이 맴도는 캐릭터는 혼자일 때도 곁에 있어 주는 숲 친구들이에요. 토닥임과 표현은 그 순간만 전해지고, 등불·방명록·사연은 남아요.</p>
+  <label class="inline" for="dimR">화면 어둡게 <input type="range" id="dimR" min="0" max="0.7" step="0.01" value="0"></label>
+  <label class="inline" for="moonOn"><input type="checkbox" id="moonOn" checked> 달님의 응원 메시지 보기</label>
+  <p>누워 있으면 1분 뒤부터 화면이 조금씩 어두워져요. 잠 못 드는 밤이 길게 이어지거나 마음이 많이 힘들면 혼자 견디지 않아도 돼요.</p>
+  <dl><dt>자살예방상담</dt><dd>109 (24시간)</dd><dt>정신건강 위기상담</dt><dd>1577-0199 (24시간)</dd></dl>
+  <p class="small">관리자 등록용 번호: <span id="myIdText" style="user-select:all;word-break:break-all">연결 전</span></p>
+  <p class="small">새벽 쉼터는 <a href="https://github.com/nocodetechstacker/dawn-shelter" target="_blank" rel="noopener" style="color:var(--amber)">GitHub</a>에 공개된 작은 프로젝트예요.</p>
+</section>
+
+<div class="pop" id="pop" hidden></div>
+<div class="toast hide" id="toast" role="status" aria-live="polite"></div>
+<div id="nogl" hidden>이 기기에서는 3D 장면을 그릴 수 없어요.<br>음악과 숨 고르기는 아래에서 그대로 쓸 수 있어요.</div>
+
+<div class="bottom">
+  <div class="bar pose" role="group" aria-label="자세">
+    <button data-s="walk" aria-pressed="true">걷기</button>
+    <button data-s="meditate" aria-pressed="false">명상</button>
+    <button data-s="sleep" aria-pressed="false">눕기</button>
+    <button data-p="pEmote" aria-pressed="false">표현</button>
+  </div>
+  <nav class="bar tools" aria-label="도구">
+    <button data-p="pMusic" aria-pressed="false">음악</button>
+    <button data-p="pBreath" aria-pressed="false">숨 고르기</button>
+    <button id="sheepBtn" aria-pressed="false">양 세기</button>
+    <button data-p="pStory" aria-pressed="false">이야기</button>
+    <button data-p="pWorry" aria-pressed="false">걱정 태우기</button>
+    <button data-p="pNote" aria-pressed="false">등불 달기</button>
+  </nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/stories.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
