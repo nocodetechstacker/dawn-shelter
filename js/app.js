@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 /* 새 버전이 배포되면 오래된 화면 대신 최신 화면을 불러오기 */
-const BUILD="202611010052";
+const BUILD="202611010058";
 (async()=>{try{const r=await fetch("version.txt?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const nv=(await r.text()).trim();
   if(nv&&nv!==BUILD){const u=new URL(location.href);if(u.searchParams.get("v")!==nv){u.searchParams.set("v",nv);location.replace(u.toString());}}}catch(e){}})();
 const $=id=>document.getElementById(id);
@@ -38,8 +38,8 @@ const TOUR=[
  {t:"마음 가는 곳으로 걸어 봐요",b:"풀밭 아무 곳이나 톡 누르면 내 캐릭터가 아장아장 걸어가요. 화면을 끌면 둘레를 둘러볼 수 있고, 오른쪽 [+] [−] 버튼이나 마우스 휠로 가까이, 멀리 볼 수 있어요. 화면을 위로 끌거나 [☆]를 누르면 별과 오로라가 흐르는 하늘을 올려다볼 수 있어요. 오른쪽 위 [장소]를 누르면 꽃밭 언덕이나 텐트 마을로 데려다줄게요.",hi:[".zoom",'.topright [data-p="pPlaces"]']},
  {t:"편한 자세로 쉬어요",b:"아래 [명상]을 누르면 자리에 앉아요. 머리 위로 마음을 다독이는 문장이 천천히 떠오를 거예요. [눕기]를 누르면 이불을 덮고 누워요. 1분쯤 지나면 화면도 살며시 어두워져요. [표현]으로 손을 흔들거나 하품도 할 수 있어요.",hi:[".bottom .pose"]},
  {t:"혼자가 아니에요",b:"지금 함께 깨어 있는 사람들도 작은 캐릭터로 보여요. 누군가를 누르면 [토닥이기]로 하트를 보낼 수 있고, 숨 고르는 사람과는 같은 박자로 숨을 쉴 수도 있어요. 걷다 보면 저 같은 숲 요정과 반딧불 친구들이 다가와 말을 걸 거예요. 반갑게 맞아 주세요."},
- {t:"잠이 오도록 도와줄게요",b:"[음악]에는 빗소리, 파도, 피아노, 기도할 때 듣기 좋은 소리까지 있어요. 잠들기 타이머도 걸 수 있어요. [숨 고르기], [양 세기], 100편의 잠자리 [이야기]도 준비해 두었어요. 머릿속이 복잡하면 [걱정 태우기]로 모닥불에 살짝 넣어 버려요. 그 말은 어디에도 남지 않아요.",hi:[".bottom .tools"]},
- {t:"마음을 나눠도 괜찮아요",b:"[등불 달기]로 누군가에게 건넬 따뜻한 한마디를 나무에 걸 수 있어요. 오른쪽 위 [마음 우체통]에는 방명록과 사연함이 있어요. 이름 없이 남고, 다른 사람들이 안아 주거나 답장을 남겨 줄 거예요.",hi:['.topright [data-p="pBoard"]','.bottom .tools [data-p="pNote"]']},
+ {t:"잠이 오도록 도와줄게요",b:"[음악]에는 빗소리, 파도, 피아노, 기도할 때 듣기 좋은 소리까지 있어요. 잠들기 타이머도 걸 수 있어요. [숨 고르기], [양 세기], 100편의 잠자리 [이야기]도 준비해 두었어요. 머릿속이 복잡하면 [걱정 태우기]로 모닥불에 살짝 넣어 버려요. 그 말은 저장되지 않고 불꽃과 함께 사라져요.",hi:[".bottom .tools"]},
+ {t:"마음을 나눠도 괜찮아요",b:"[등불 달기]로 누군가에게 건넬 따뜻한 한마디를 나무에 걸 수 있어요. 오른쪽 위 [마음 우체통]에는 방명록과 사연함이 있어요. 이름 없이 익명으로 저장되고, 다른 사람들이 안아 주거나 답장을 남겨 줄 거예요. 내 글은 언제든 지울 수 있어요.",hi:['.topright [data-p="pBoard"]','.bottom .tools [data-p="pNote"]']},
  {t:"마지막으로, 나를 꾸며 봐요",b:"오른쪽 위 [내 모습]에서 토끼, 고양이, 펭귄처럼 좋아하는 모습과 색을 골라 보세요. 이 안내는 [안내]에서 언제든 다시 볼 수 있어요. 마음이 많이 힘든 밤에는 109나 1577-0199에서 24시간 이야기를 들어 줘요. 그럼, 편안한 밤 보내요.",hi:['.topright [data-p="pLook"]','.topright [data-p="pInfo"]']}];
 let tourI=0;
 TOUR.forEach(()=>$("tourDots").append(document.createElement("i")));
@@ -1006,7 +1006,7 @@ $("wishBtn").addEventListener("click",()=>{$("wishBtn").hidden=true;openPanel("p
 $("wishGo").addEventListener("click",()=>{const v=$("wish").value.trim();if(!v){$("wish").focus();return;}
   $("wish").value="";openPanel(null);
   for(let i=0;i<14;i++){const p=me.root.position.clone();p.y=1.6;floatSprite(TEX_CORE,p,{scale:.25,vy:rnd(3,6),vx:rnd(-.7,.7),life:2600,add:true,color:0xfff0c8,grow:-.5});}
-  toast("소원이 별에게 닿았어요. 이 말은 어디에도 남지 않아요");});
+  toast("소원이 별에게 닿았어요. 이 말은 저장되지 않아요");});
 
 /* 입력 */
 const ray=new THREE.Raycaster();const ndc=new THREE.Vector2();let downAt=null;
@@ -1168,7 +1168,7 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);const t=clock.elapsedTi
     tmpV.lerpVectors(fy.from,fy.to,easeIO(f));tmpV.y+=Math.sin(f*Math.PI)*(fy.kind==="worry"?2.2:1.6);fy.s.position.copy(tmpV);
     if(fy.kind==="worry"){const sc=1-f*.85;fy.s.scale.set(6*sc,2*sc,1);fy.s.material.opacity=f<.7?1:1-(f-.7)/.3;}
     if(f>=1){scene.remove(fy.s);if(fy.kind==="worry")fy.s.material.map.dispose();fy.s.material.dispose();flyers.splice(i,1);
-      if(fy.kind==="worry"){fireBoost=1.2;spawnEmber(28);toast("걱정을 모닥불에 넣었어요. 이 말은 어디에도 남지 않아요");}}}
+      if(fy.kind==="worry"){fireBoost=1.2;spawnEmber(28);toast("걱정을 모닥불에 넣었어요. 이 말은 저장되지 않아요");}}}
   if(sheepOn){if(pnow>sheepNext){sheepList.push(makeSheep());sheepNext=pnow+3300;}
     for(let i=sheepList.length-1;i>=0;i--){const s=sheepList[i];const f=(pnow-s.t0)/6000;const x=-5+f*10;let y=0;
       const jump=Math.abs(x)<1.1;if(jump)y=Math.sin((x+1.1)/2.2*Math.PI)*1.3;
