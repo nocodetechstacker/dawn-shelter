@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap">
-<link rel="stylesheet" href="css/style.css?v=202611010017">
+<link rel="stylesheet" href="css/style.css?v=202611010021">
 </head>
 <body>
 <canvas id="scene" aria-label="모닥불과 큰 나무가 있는 밤의 풀밭. 땅을 누르면 내 캐릭터가 그쪽으로 걸어갑니다."></canvas>
@@ -37,12 +37,13 @@
 <div class="sky-msg" id="moonMsg" aria-live="polite"><div class="lbl">달님이 띄운 말</div><div class="t" id="moonText"></div></div>
 <div class="med" id="medPhrase" hidden></div>
 <div class="fairy-msg" id="fairyMsg" hidden><div class="who" id="fairyWho"></div><div class="t" id="fairyText"></div></div>
-<div class="hint" id="hint">풀밭을 누르면 걸어가요 · 끌어서 둘러보고, 스크롤이나 +/− 버튼으로 확대·축소해요</div>
+<div class="hint" id="hint">풀밭을 누르면 걸어가요 · 위로 끌거나 ☆ 버튼을 누르면 하늘을 올려다봐요</div>
 <div class="np" id="np">
   <button class="np-main" id="npMain" aria-label="음악 고르기"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="np-txt"><span class="np-name" id="npName">화면을 누르면 음악이 흘러요</span><span class="np-sub">음악 바꾸기 ›</span></span></button>
   <button class="np-mute" id="npMute" aria-label="음악 끄기"><svg viewBox="0 0 20 20" id="npIcon"><path d="M3 8v4h3l4 3V5L6 8H3z"/><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"/></svg></button>
 </div>
 <div class="zoom" role="group" aria-label="화면 확대와 축소">
+  <button id="zSky" aria-label="하늘 올려다보기" aria-pressed="false"><svg viewBox="0 0 18 18"><path d="M9 2.5l1.9 4 4.4.5-3.3 3 .9 4.3L9 12.2l-3.9 2.1.9-4.3-3.3-3 4.4-.5z"/></svg></button>
   <button id="zIn" aria-label="확대"><svg viewBox="0 0 18 18"><path d="M9 3v12M3 9h12"/></svg></button>
   <button id="zOut" aria-label="축소"><svg viewBox="0 0 18 18"><path d="M3 9h12"/></svg></button>
   <button id="zReset" aria-label="시점 처음으로"><svg viewBox="0 0 18 18"><path d="M3.5 9a5.5 5.5 0 1 0 1.6-3.9"/><path d="M3 3v3.2h3.2"/></svg></button>
@@ -140,6 +141,7 @@
   <div class="seg" id="weathers">
     <button data-w="clear" aria-pressed="true">맑은 밤</button><button data-w="snow" aria-pressed="false">함박눈</button><button data-w="rain" aria-pressed="false">보슬비</button><button data-w="petal" aria-pressed="false">꽃잎</button>
   </div>
+  <label class="inline" for="auroraOn"><input type="checkbox" id="auroraOn" checked> 북쪽 하늘에 오로라 띄우기</label>
 </section>
 
 <section class="panel" id="pLook" hidden>
@@ -196,8 +198,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=202611010017"></script>
-<script src="js/stories.js?v=202611010017"></script>
-<script src="js/app.js?v=202611010017"></script>
+<script src="js/config.js?v=202611010021"></script>
+<script src="js/stories.js?v=202611010021"></script>
+<script src="js/app.js?v=202611010021"></script>
 </body>
 </html>

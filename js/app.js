@@ -29,7 +29,7 @@ const segPick=(wrap,btn)=>wrap.querySelectorAll("button").forEach(x=>x.setAttrib
 /* ---------- 처음 온 사람을 위한 안내 ---------- */
 const TOUR=[
  {t:"어서 와요, 정말 반가워요",b:"잠이 오지 않는 밤이죠? 괜찮아요. 여기는 같은 밤을 보내는 사람들이 조용히 머물다 가는 작은 쉼터예요. 제가 천천히 둘러보는 법을 알려 드릴게요. 1분이면 충분해요."},
- {t:"마음 가는 곳으로 걸어 봐요",b:"풀밭 아무 곳이나 톡 누르면 내 캐릭터가 아장아장 걸어가요. 화면을 끌면 둘레를 둘러볼 수 있고, 오른쪽 [+] [−] 버튼이나 마우스 휠로 가까이, 멀리 볼 수 있어요. 오른쪽 위 [장소]를 누르면 꽃밭 언덕이나 텐트 마을로 데려다줄게요.",hi:[".zoom",'.topright [data-p="pPlaces"]']},
+ {t:"마음 가는 곳으로 걸어 봐요",b:"풀밭 아무 곳이나 톡 누르면 내 캐릭터가 아장아장 걸어가요. 화면을 끌면 둘레를 둘러볼 수 있고, 오른쪽 [+] [−] 버튼이나 마우스 휠로 가까이, 멀리 볼 수 있어요. 화면을 위로 끌거나 [☆]를 누르면 별과 오로라가 흐르는 하늘을 올려다볼 수 있어요. 오른쪽 위 [장소]를 누르면 꽃밭 언덕이나 텐트 마을로 데려다줄게요.",hi:[".zoom",'.topright [data-p="pPlaces"]']},
  {t:"편한 자세로 쉬어요",b:"아래 [명상]을 누르면 자리에 앉아요. 머리 위로 마음을 다독이는 문장이 천천히 떠오를 거예요. [눕기]를 누르면 이불을 덮고 누워요. 1분쯤 지나면 화면도 살며시 어두워져요. [표현]으로 손을 흔들거나 하품도 할 수 있어요.",hi:[".bottom .pose"]},
  {t:"혼자가 아니에요",b:"지금 함께 깨어 있는 사람들도 작은 캐릭터로 보여요. 누군가를 누르면 [토닥이기]로 하트를 보낼 수 있고, 숨 고르는 사람과는 같은 박자로 숨을 쉴 수도 있어요. 걷다 보면 저 같은 숲 요정과 반딧불 친구들이 다가와 말을 걸 거예요. 반갑게 맞아 주세요."},
  {t:"잠이 오도록 도와줄게요",b:"[음악]에는 빗소리, 파도, 피아노, 기도할 때 듣기 좋은 소리까지 있어요. 잠들기 타이머도 걸 수 있어요. [숨 고르기], [양 세기], 100편의 잠자리 [이야기]도 준비해 두었어요. 머릿속이 복잡하면 [걱정 태우기]로 모닥불에 살짝 넣어 버려요. 그 말은 어디에도 남지 않아요.",hi:[".bottom .tools"]},
@@ -534,6 +534,27 @@ function setWeather(w){weather=w;store.set("shelter.weather",w);segPick($("weath
 $("weathers").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>setWeather(b.dataset.w)));
 setWeather(["clear","snow","rain","petal"].includes(weather)?weather:"clear");
 
+/* ---------- 하늘: 은하수와 오로라 ---------- */
+{const N=2600,pos=new Float32Array(N*3),seed=new Float32Array(N);const tilt=new THREE.Euler(.5,.3,.9);const v=new THREE.Vector3();let k=0;
+ for(let i=0;i<N*3&&k<N;i++){const a=Math.random()*Math.PI*2;const g=(Math.random()+Math.random()+Math.random()-1.5)*.16;v.set(Math.cos(a),g,Math.sin(a)).normalize().applyEuler(tilt);
+   if(v.y<.04)continue;pos[k*3]=v.x*285;pos[k*3+1]=v.y*285;pos[k*3+2]=v.z*285;seed[k]=Math.random()*.55;k++;}
+ const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(pos.subarray(0,k*3),3));g.setAttribute("seed",new THREE.BufferAttribute(seed.subarray(0,k),1));
+ scene.add(new THREE.Points(g,starMat));}
+const auroraMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
+  uniforms:{t:{value:0},amp:{value:.55}},
+  vertexShader:`varying vec2 vUv;uniform float t;void main(){vUv=uv;vec3 p=position;p.z+=sin(p.x*.018+t*.08)*26.+sin(p.x*.05+t*.13)*6.;p.y+=sin(p.x*.03+t*.11)*5.;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`,
+  fragmentShader:`varying vec2 vUv;uniform float t;uniform float amp;void main(){
+    float r=.5+.5*sin(vUv.x*90.+t*.5+sin(vUv.x*11.+t*.25)*4.);float rays=.35+.65*pow(r,2.5);
+    float v=smoothstep(0.,.18,vUv.y)*(1.-smoothstep(.3,1.,vUv.y));float wave=.55+.45*sin(t*.17+vUv.x*7.);
+    float edge=smoothstep(0.,.12,vUv.x)*(1.-smoothstep(.88,1.,vUv.x));
+    vec3 c=mix(vec3(.15,1.,.55),vec3(.55,.35,1.),smoothstep(.25,.95,vUv.y));c=mix(c,vec3(.2,.9,.9),.25*sin(vUv.x*5.+t*.1));
+    float a=v*rays*wave*edge*amp;gl_FragColor=vec4(c*a,a);}`});
+const auroras=[[-30,70,-185,300,70,.0],[60,58,-170,260,55,.35],[-90,52,-150,220,50,-.5]].map(([x,y,z,w,h,ry])=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h,140,1),auroraMat);m.position.set(x,y,z);m.rotation.y=ry;m.rotation.x=.25;scene.add(m);return m;});
+let auroraOn=store.get("shelter.aurora")!=="0";
+function setAurora(on){auroraOn=on;store.set("shelter.aurora",on?"1":"0");auroras.forEach(m=>m.visible=on);$("auroraOn").checked=on;}
+$("auroraOn").addEventListener("change",e=>setAurora(e.target.checked));setAurora(auroraOn);
+
+
 /* =========================================================
    캐릭터
    ========================================================= */
@@ -909,14 +930,18 @@ const ray=new THREE.Raycaster();const ndc=new THREE.Vector2();let downAt=null;
 let zoom=Math.max(.45,Math.min(2.4,Number(store.get("shelter.zoom"))||1)),camYaw=0;
 function setZoom(z){zoom=Math.max(.45,Math.min(2.4,z));store.set("shelter.zoom",String(Math.round(zoom*100)/100));}
 $("zIn").addEventListener("click",()=>setZoom(zoom/1.25));$("zOut").addEventListener("click",()=>setZoom(zoom*1.25));
-$("zReset").addEventListener("click",()=>{setZoom(1);camYaw=0;});
+let lookUp=0,lookUpCur=0,skyToasted=false;const skyV=new THREE.Vector3();
+function setLookUp(v){lookUp=Math.max(0,Math.min(1,v));$("zSky").setAttribute("aria-pressed",String(lookUp>.5));
+  if(lookUp>.5&&!skyToasted){skyToasted=true;toast("하늘을 올려다봐요 · 북쪽에 오로라가 흐르고, 가끔 별똥별이 떨어져요",4200);}}
+$("zSky").addEventListener("click",()=>setLookUp(lookUp>.5?0:1));
+$("zReset").addEventListener("click",()=>{setZoom(1);camYaw=0;setLookUp(0);});
 canvas.addEventListener("wheel",e=>{e.preventDefault();setZoom(zoom*Math.exp(e.deltaY*.0012));},{passive:false});
 const ptrs=new Map();let pinchD=0;
 canvas.addEventListener("pointerdown",e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});try{canvas.setPointerCapture(e.pointerId);}catch(_){}
   if(ptrs.size===1)downAt={x:e.clientX,y:e.clientY};else{downAt=null;const v=[...ptrs.values()];pinchD=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);}});
-canvas.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x;p.x=e.clientX;p.y=e.clientY;
+canvas.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
   if(ptrs.size>=2){const v=[...ptrs.values()];const d=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);if(pinchD>0&&d>0)setZoom(zoom*pinchD/d);pinchD=d;return;}
-  if(downAt&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)>10){camYaw-=dx*.006;canvas.style.cursor="grabbing";}});
+  if(downAt&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)>10){camYaw-=dx*.006;if(Math.abs(dy)>Math.abs(dx)*.6)setLookUp(lookUp-dy*.0045);canvas.style.cursor="grabbing";}});
 function endPtr(e){ptrs.delete(e.pointerId);if(ptrs.size<2)pinchD=0;canvas.style.cursor="";}
 canvas.addEventListener("pointercancel",e=>{endPtr(e);downAt=null;});
 canvas.addEventListener("pointerup",e=>{endPtr(e);if(!downAt)return;const moved=Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y);downAt=null;if(moved>10)return;
@@ -1055,7 +1080,8 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);const t=clock.elapsedTi
       if(!s.counted&&x>0){s.counted=true;sheepN++;$("sheepCount").textContent=`양 ${koCount(sheepN)} 마리`;
         if(actx&&actx.state==="running")tone(bus,actx.currentTime,mtof(76+[0,2,4,7,9][sheepN%5]),1.4,{gain:.05});}
       if(f>=1){sheepGroup.remove(s.g);sheepList.splice(i,1);}}}
-  if(pnow>nextShoot){if(weather!=="rain")spawnShoot();nextShoot=pnow+35000+Math.random()*50000;}
+  if(lookUp>.5&&nextShoot-pnow>20000)nextShoot=pnow+3000+Math.random()*6000;
+  if(pnow>nextShoot){if(weather!=="rain")spawnShoot();nextShoot=pnow+(lookUp>.5?8000+Math.random()*12000:35000+Math.random()*50000);}
   for(let i=shooting.length-1;i>=0;i--){const s=shooting[i];const f=(pnow-s.t0)/1400;
     if(f>=1){scene.remove(s.line);scene.remove(s.head);s.line.material.dispose();s.head.material.dispose();shooting.splice(i,1);continue;}
     const headP=s.start.clone().addScaledVector(s.dir,f*90);const tail=s.start.clone().addScaledVector(s.dir,Math.max(0,f*90-26));
@@ -1066,7 +1092,12 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);const t=clock.elapsedTi
   off.multiplyScalar(zoom).applyAxisAngle(UP,camYaw);
   const wantPos=tmpV2.copy(me.pos).add(off);wantPos.x+=reduce?0:Math.sin(t*.15)*.3;
   camPos.lerp(wantPos,1-Math.exp(-dt*3));
-  tmpV.set(0,sleepCam?.6:1.7,-(sleepCam?3:6)*Math.min(1.2,zoom)).applyAxisAngle(UP,camYaw).add(me.pos);camLook.lerp(tmpV,1-Math.exp(-dt*3));
+  tmpV.set(0,sleepCam?.6:1.7,-(sleepCam?3:6)*Math.min(1.2,zoom)).applyAxisAngle(UP,camYaw).add(me.pos);
+  lookUpCur+=(lookUp-lookUpCur)*Math.min(1,dt*2.5);
+  if(lookUpCur>.002){const e=easeIO(Math.min(1,lookUpCur));const pitch=.46*e;skyV.set(0,0,-1).applyAxisAngle(UP,camYaw);
+    skyV.multiplyScalar(Math.cos(pitch)*60);skyV.y=Math.sin(pitch)*60;skyV.add(camPos);tmpV.lerp(skyV,e);}
+  camLook.lerp(tmpV,1-Math.exp(-dt*3));
+  auroraMat.uniforms.t.value=t;auroraMat.uniforms.amp.value=.5+.5*lookUpCur;
   camera.position.copy(camPos);camera.lookAt(camLook);
   // 시야를 가리는 나무는 반투명하게
   {const cx=camPos.x,cz=camPos.z,dx=me.pos.x-cx,dz=me.pos.z-cz,L2=dx*dx+dz*dz||1;
