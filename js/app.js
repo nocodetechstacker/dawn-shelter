@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 /* 새 버전이 배포되면 오래된 화면 대신 최신 화면을 불러오기 */
-const BUILD="202611010112";
+const BUILD="202611050931";
 (async()=>{try{const r=await fetch("version.txt?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const nv=(await r.text()).trim();
   if(nv&&nv!==BUILD){const u=new URL(location.href);if(u.searchParams.get("v")!==nv){u.searchParams.set("v",nv);location.replace(u.toString());}}}catch(e){}})();
 const $=id=>document.getElementById(id);
@@ -38,7 +38,7 @@ const TOUR=[
  {t:"마음 가는 곳으로 걸어 봐요",b:"풀밭 아무 곳이나 톡 누르면 내 캐릭터가 아장아장 걸어가요. 화면을 끌면 둘레를 둘러볼 수 있고, 오른쪽 [+] [−] 버튼이나 마우스 휠로 가까이, 멀리 볼 수 있어요. 화면을 위로 끌거나 [☆]를 누르면 별과 오로라가 흐르는 하늘을 올려다볼 수 있어요. 오른쪽 위 [장소]를 누르면 꽃밭 언덕이나 텐트 마을로 데려다줄게요.",hi:[".zoom",'.topright [data-p="pPlaces"]']},
  {t:"편한 자세로 쉬어요",b:"아래 [명상]을 누르면 자리에 앉아요. 머리 위로 마음을 다독이는 문장이 천천히 떠오를 거예요. [눕기]를 누르면 이불을 덮고 누워요. 1분쯤 지나면 화면도 살며시 어두워져요. [표현]으로 손을 흔들거나 하품도 할 수 있어요.",hi:[".bottom .pose"]},
  {t:"혼자가 아니에요",b:"지금 함께 깨어 있는 사람들도 작은 캐릭터로 보여요. 누군가를 누르면 [토닥이기]로 하트를 보낼 수 있고, 숨 고르는 사람과는 같은 박자로 숨을 쉴 수도 있어요. 걷다 보면 저 같은 숲 요정과 반딧불 친구들이 다가와 말을 걸 거예요. 반갑게 맞아 주세요."},
- {t:"잠이 오도록 도와줄게요",b:"[음악]에는 빗소리, 파도, 피아노, 기도할 때 듣기 좋은 소리까지 있어요. 잠들기 타이머도 걸 수 있어요. [숨 고르기], [양 세기], 100편의 잠자리 [이야기]도 준비해 두었어요. 머릿속이 복잡하면 [걱정 태우기]로 모닥불에 살짝 넣어 버려요. 그 말은 저장되지 않고 불꽃과 함께 사라져요.",hi:[".bottom .tools"]},
+ {t:"잠이 오도록 도와줄게요",b:"[음악]에는 빗소리, 파도, 피아노, 기도할 때 듣기 좋은 소리까지 있어요. 잠들기 타이머도 걸 수 있어요. [숨 고르기], [양 세기], 100편의 잠자리 [이야기]도 준비해 두었어요. [필사]에서는 좋은 글을 한 글자씩 따라 쓸 수 있어요. 머릿속이 복잡하면 [걱정 태우기]로 모닥불에 살짝 넣어 버려요. 그 말은 저장되지 않고 불꽃과 함께 사라져요.",hi:[".bottom .tools"]},
  {t:"마음을 나눠도 괜찮아요",b:"[등불 달기]로 누군가에게 건넬 따뜻한 한마디를 나무에 걸 수 있어요. 오른쪽 위 [마음 우체통]에는 방명록과 사연함이 있어요. 이름 없이 익명으로 저장되고, 다른 사람들이 안아 주거나 답장을 남겨 줄 거예요. 내 글은 언제든 지울 수 있어요.",hi:['.topright [data-p="pBoard"]','.bottom .tools [data-p="pNote"]']},
  {t:"마지막으로, 나를 꾸며 봐요",b:"오른쪽 위 [내 모습]에서 토끼, 고양이, 펭귄처럼 좋아하는 모습과 색을 골라 보세요. 이 안내는 [안내]에서 언제든 다시 볼 수 있어요. 마음이 많이 힘든 밤에는 109나 1577-0199에서 24시간 이야기를 들어 줘요. 그럼, 편안한 밤 보내요.",hi:['.topright [data-p="pLook"]','.topright [data-p="pInfo"]']}];
 let tourI=0;
@@ -299,6 +299,83 @@ $("storyGo").addEventListener("click",()=>{if(storyIdx<0){const list=BED[storyTh
 $("storyPrev").addEventListener("click",()=>stepStory(-1));
 $("storyBack").addEventListener("click",showToc);
 setTimeout(showToc,0);
+
+/* ---------- 필사 ---------- */
+const COPY=window.COPYBOOK||[];
+const COPY_CATS=["전체",...[...new Set(COPY.map(c=>c.cat))]];
+let copyCat="전체",copyCur=null,copyComposing=false,copyDone=new Set(),copyDrafts=new Map();
+try{copyDone=new Set(JSON.parse(store.get("shelter.copied")||"[]"));}catch(e){}
+const PUNCT=/[.,!?·…"'“”‘’「」『』()\-—~:;]/;
+function copyCard(c,small){const b=el("button","copy-card"+(small?" sm":""));b.type="button";
+  const first=c.text.split("\n").find(l=>l.trim())||"";
+  b.append(el("span","copy-cat",c.cat),el("span","copy-t",c.title),el("span","copy-by",c.by));
+  if(!small)b.append(el("span","copy-pre",first));
+  if(copyDone.has(c.id))b.append(el("span","toc-r","써 봤어요"));
+  b.addEventListener("click",()=>openCopy(c));return b;}
+function renderCopyPick(){const rec=$("copyRec");rec.replaceChildren();
+  const pool=COPY.filter(c=>!copyDone.has(c.id));const src=pool.length>=3?pool:COPY;
+  shuffle(src.slice()).slice(0,3).forEach(c=>rec.append(copyCard(c,false)));
+  const cats=$("copyCats");if(!cats.children.length)COPY_CATS.forEach(k=>{const b=document.createElement("button");b.textContent=k;b.setAttribute("aria-pressed",String(k===copyCat));
+    b.addEventListener("click",()=>{segPick(cats,b);copyCat=k;renderCopyList();});cats.append(b);});
+  renderCopyList();}
+function renderCopyList(){const list=$("copyList");list.replaceChildren();
+  COPY.filter(c=>copyCat==="전체"||c.cat===copyCat).forEach(c=>list.append(copyCard(c,true)));}
+/* 원문을 글자 단위로 나누고, 띄어쓰기·줄바꿈 단위로 낱말을 묶어요. */
+function buildCopy(c){const box=$("copyText");box.replaceChildren();const chars=[];const words=[[]];
+  for(const ch of c.text){
+    if(/\s/.test(ch)){box.append(document.createTextNode(ch));if(words[words.length-1].length)words.push([]);continue;}
+    const s=document.createElement("span");s.textContent=ch;box.append(s);
+    const item={ch,span:s,punct:PUNCT.test(ch)};chars.push(item);words[words.length-1].push(item);}
+  if(!words[words.length-1].length)words.pop();
+  return{chars,words};}
+function normTyped(v,lenient){let t=v.replace(/[“”]/g,'"').replace(/[‘’]/g,"'");
+  if(lenient)t=[...t].filter(ch=>!PUNCT.test(ch)).join("");
+  return t.split(/\s+/);}
+function openCopy(c){copyCur={c,...buildCopy(c)};
+  $("copyTitle").textContent=c.title;$("copyBy").textContent=c.by;
+  $("copyPick").hidden=true;$("copyWrite").hidden=false;$("pCopy").classList.add("writing");
+  $("copyInput").value=copyDrafts.get(c.id)||"";checkCopy();
+  setTimeout(()=>{try{$("copyInput").focus({preventScroll:true});}catch(e){}},50);}
+function checkCopy(){if(!copyCur)return;const lenient=$("copyPunct").checked;const v=$("copyInput").value;copyDrafts.set(copyCur.c.id,v);
+  const src=copyCur.words.map(w=>lenient?w.filter(x=>!x.punct):w).map(w=>w.length?w:null);
+  const srcW=src.map((w,i)=>({w,orig:copyCur.words[i]})).filter(x=>x.w);
+  copyCur.chars.forEach(x=>{x.span.className=x.punct&&lenient?"pu":"";});
+  let typed=normTyped(v,lenient);const endsWithSpace=/\s$/.test(v);
+  if(typed[0]==="")typed.shift();if(typed.length&&typed[typed.length-1]==="")typed.pop();
+  const errs=[];let nextSpan=null,okChars=0,total=0;srcW.forEach(x=>total+=x.w.length);
+  srcW.forEach((x,i)=>{const t=typed[i];
+    if(t===undefined){if(!nextSpan)nextSpan=x.w[0].span;return;}
+    const done=i<typed.length-1||endsWithSpace;const tc=[...t];let bad=false;
+    x.w.forEach((s,j)=>{const ch=tc[j];
+      if(ch===undefined){if(done){s.span.className="miss";bad=true;}else if(!nextSpan)nextSpan=s.span;return;}
+      const provisional=!done&&j===tc.length-1;
+      if(ch===s.ch){s.span.className="ok";okChars++;}
+      else if(provisional){s.span.className="typing";}
+      else{s.span.className="bad";bad=true;}});
+    if(tc.length>x.w.length&&(done||tc.length>x.w.length+1)){x.w[x.w.length-1].span.className="bad";bad=true;}
+    if(bad&&(done||!copyComposing))errs.push({want:x.orig.map(s=>s.ch).join(""),got:t});});
+  if(nextSpan)nextSpan.classList.add("next");
+  const extra=typed.length-srcW.length;
+  const pct=total?Math.round(okChars/total*100):0;
+  const allTyped=typed.length>=srcW.length&&srcW.length>0;
+  const finished=allTyped&&errs.length===0&&extra<=0&&okChars===total;
+  $("copyProg").textContent=`${pct}%`+(errs.length?` · 다른 곳 ${errs.length}`:"");
+  const box=$("copyErrs");box.replaceChildren();
+  if(finished){box.append(el("p","copy-ok","끝까지 다 썼어요. 한 글자 한 글자 정성껏 따라 쓴 오늘 밤이 참 좋아요."));
+    if(!copyDone.has(copyCur.c.id)){copyDone.add(copyCur.c.id);store.set("shelter.copied",JSON.stringify([...copyDone]));toast("필사를 마쳤어요. 수고했어요");try{spawnEmber(16);}catch(e){}}
+    return;}
+  if(errs.length){box.append(el("p","small","원문과 다른 곳이 있어요. 왼쪽에 붉게 표시했어요."));
+    const ul=el("ul","copy-errlist");errs.slice(0,4).forEach(e=>{const li=el("li");li.append(el("span","want",e.want),el("span","arrow"," ← "),el("span","got",e.got||"(빠짐)"));ul.append(li);});
+    if(errs.length>4)ul.append(el("li","small",`그 밖에 ${errs.length-4}곳`));box.append(ul);}
+  if(extra>0)box.append(el("p","small","원문보다 더 많이 썼어요. 끝부분을 확인해 보세요."));}
+$("copyInput").addEventListener("compositionstart",()=>{copyComposing=true;});
+$("copyInput").addEventListener("compositionend",()=>{copyComposing=false;checkCopy();});
+$("copyInput").addEventListener("input",checkCopy);
+$("copyPunct").addEventListener("change",checkCopy);
+$("copyBack").addEventListener("click",()=>{copyCur=null;$("copyWrite").hidden=true;$("copyPick").hidden=false;$("pCopy").classList.remove("writing");renderCopyPick();});
+$("copyReset").addEventListener("click",()=>{$("copyInput").value="";checkCopy();$("copyInput").focus();});
+$("copyNext").addEventListener("click",()=>{const pool=COPY.filter(c=>!copyDone.has(c.id)&&(!copyCur||c.id!==copyCur.c.id));const src=pool.length?pool:COPY;openCopy(src[Math.floor(Math.random()*src.length)]);});
+setTimeout(renderCopyPick,0);
 
 /* ---------- 마음 우체통 (방명록, 사연) · Supabase ---------- */
 $("boardTabs").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{segPick($("boardTabs"),b);$("tabGuest").hidden=b.dataset.tab!=="guest";$("tabStory").hidden=b.dataset.tab!=="story";}));

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap">
-<link rel="stylesheet" href="css/style.css?v=202611010112">
+<link rel="stylesheet" href="css/style.css?v=202611050931">
 </head>
 <body>
 <canvas id="scene" aria-label="모닥불과 큰 나무가 있는 밤의 풀밭. 땅을 누르면 내 캐릭터가 그쪽으로 걸어갑니다."></canvas>
@@ -97,6 +97,30 @@
     <div class="seg"><button class="btn ghost" id="storyPrev" hidden>이전</button><button class="btn ghost" id="storyBack" hidden>목록</button><button class="btn" id="storyGo">아무 이야기나</button></div></div>
 </section>
 
+<section class="panel wide copy" id="pCopy" hidden>
+  <div class="ph"><h2>필사</h2></div>
+  <div id="copyPick">
+    <p>좋은 글을 한 글자씩 따라 쓰다 보면 생각이 천천히 가라앉아요. 마음에 드는 글을 골라 보세요. 입력한 글은 어디에도 보내거나 저장하지 않아요.</p>
+    <h3 class="copy-h">오늘 밤 추천</h3>
+    <div class="copy-rec" id="copyRec"></div>
+    <h3 class="copy-h">모든 글</h3>
+    <div class="seg" id="copyCats"></div>
+    <div class="copy-list" id="copyList"></div>
+  </div>
+  <div id="copyWrite" hidden>
+    <div class="copy-head"><button class="link" id="copyBack" type="button">‹ 글 고르기</button><span class="small" id="copyProg"></span></div>
+    <div class="copy-grid">
+      <div class="copy-src" aria-label="따라 쓸 글"><h3 id="copyTitle"></h3><p class="small" id="copyBy"></p><div class="copy-text" id="copyText"></div></div>
+      <div class="copy-in">
+        <textarea id="copyInput" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="왼쪽 글을 천천히 따라 써 보세요." aria-label="필사 입력"></textarea>
+        <label class="inline small"><input type="checkbox" id="copyPunct" checked> 문장부호(쉼표, 마침표, 따옴표)는 빼고 써도 괜찮아요</label>
+        <div class="copy-errs" id="copyErrs" aria-live="polite"></div>
+        <div class="row"><button class="btn ghost" id="copyReset" type="button">처음부터</button><button class="btn" id="copyNext" type="button">다른 글 쓰기</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="panel" id="pWorry" hidden>
   <div class="ph"><h2>걱정 태우기</h2></div>
   <p>머릿속을 맴도는 생각을 적어 모닥불에 넣어요. 불꽃이 되어 올라가고 사라져요. 적은 말은 내 화면 안에서만 쓰이고, 서버로 보내거나 저장하지 않아요.</p>
@@ -169,7 +193,7 @@
     <ul>
       <li><b>이름을 묻지 않아요.</b> 이름, 이메일, 전화번호를 받지 않아요. 브라우저마다 익명 번호가 저절로 만들어지고, 다른 사람 화면에는 "다녀간 이웃", "익명의 사연"으로만 보여요.</li>
       <li><b>저장되는 것:</b> 나무에 건 등불, 방명록, 사연과 답장, 안아 주기, 신고, 그리고 방문자 수와 머문 시간을 세기 위한 날짜별 방문 기록이에요.</li>
-      <li><b>저장되지 않는 것:</b> 걱정 태우기와 소원은 내 화면 안에서만 쓰이고, 서버로 보내거나 저장하지 않아요. 걷기·표현·토닥이기는 그 순간에만 전해지고 남지 않아요. 음악, 날씨, 화면 밝기 같은 설정은 내 기기에만 저장돼요.</li>
+      <li><b>저장되지 않는 것:</b> 걱정 태우기, 소원, 필사한 글은 내 화면 안에서만 쓰이고, 서버로 보내거나 저장하지 않아요. 걷기·표현·토닥이기는 그 순간에만 전해지고 남지 않아요. 음악, 날씨, 화면 밝기 같은 설정은 내 기기에만 저장돼요.</li>
       <li><b>내 글은 내가 지울 수 있어요.</b> 지우면 바로 삭제돼요. 브라우저 기록을 지우면 내 글을 알아볼 수 없게 되니, 그 뒤에 지우고 싶은 글이 있으면 신고해 주세요.</li>
       <li><b>함께 지키는 규칙:</b> 혐오, 괴롭힘, 광고, 다른 사람의 개인정보가 담긴 글은 가려요. 서로 다른 세 사람이 신고한 글은 자동으로 가려지고, 운영자가 다시 살펴봐요.</li>
       <li><b>보관과 쓰임:</b> 글은 직접 지우거나 운영자가 정리하기 전까지 보관돼요. 모인 글과 기록을 광고나 판매에 쓰지 않아요. 다만 이 페이지를 운영하는 호스팅 서비스(GitHub, Supabase)가 접속 기록(IP 주소 등)을 운영을 위해 일정 기간 보관할 수 있어요.</li>
@@ -211,6 +235,7 @@
     <button data-p="pBreath" aria-pressed="false">숨 고르기</button>
     <button id="sheepBtn" aria-pressed="false">양 세기</button>
     <button data-p="pStory" aria-pressed="false">이야기</button>
+    <button data-p="pCopy" aria-pressed="false">필사</button>
     <button data-p="pWorry" aria-pressed="false">걱정 태우기</button>
     <button data-p="pNote" aria-pressed="false">등불 달기</button>
   </nav>
@@ -218,8 +243,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
-<script src="js/config.js?v=202611010112"></script>
-<script src="js/stories.js?v=202611010112"></script>
-<script src="js/app.js?v=202611010112"></script>
+<script src="js/config.js?v=202611050931"></script>
+<script src="js/copybook.js?v=202611050931"></script>
+<script src="js/stories.js?v=202611050931"></script>
+<script src="js/app.js?v=202611050931"></script>
 </body>
 </html>
